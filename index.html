@@ -1,0 +1,275 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>空飛ぶクルマ・お絵描き試作（白初期化・ガイド追加）</title><link rel="icon" href="data:,"><link rel="manifest" href="./manifest.json"><meta name="theme-color" content="#e6f4ff"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="空飛ぶクルマ"><script src="./vendor/aframe.min.js"></script><style>*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:#edf2f7;color:#243246}header{background:white;text-align:center;font-weight:800;padding:11px}main{height:calc(100dvh - 44px);display:flex;flex-direction:column}.viewer{position:relative;flex:1;min-height:190px;background:#eaf2fb}.viewer a-scene{width:100%;height:100%}.status{position:absolute;left:9px;top:9px;background:#fffe;padding:7px 9px;border-radius:8px;font-size:12px;max-width:75%}.resetView{position:absolute;right:9px;top:9px}.panel{background:white;padding:10px 14px max(10px,env(safe-area-inset-bottom));box-shadow:0 -2px 10px #0001}.tabs,.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.tabs button,.tools button,.resetView{border:1px solid #cad3df;border-radius:9px;padding:9px 13px;background:#fff;font-weight:700}.tabs button.active{background:#173b70;color:#fff}.drawing{display:flex;justify-content:center;margin:8px auto;max-width:100%;height:min(34dvh,310px);position:relative}#draw{height:100%;max-width:100%;aspect-ratio:1;touch-action:none;border:2px solid #cdd6e2;border-radius:6px;background:white;cursor:crosshair}.guide{z-index:2;position:absolute;inset:0;margin:auto;height:100%;max-width:100%;aspect-ratio:1;pointer-events:none;opacity:.85}.guide svg{display:block;width:100%;height:100%}.guide.side{display:none}.drawing[data-view="side"] .guide.top{display:none}.drawing[data-view="side"] .guide.side{display:block;z-index:3;opacity:1;mix-blend-mode:multiply}.tools{justify-content:center;font-size:13px}.tools input[type=color]{width:42px;height:34px;border:0;background:none}.tools input[type=range]{width:95px}.tools button.active{background:#dce9fc}.hint{font-size:11px;color:#64748b;text-align:center;margin-top:6px}@media(max-height:700px){.drawing{height:min(28dvh,220px)}} 
+.print-tools{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:8px}.print-tools button,.print-actions button{border:1px solid #b8c7d8;background:#fff;border-radius:8px;padding:9px 12px;font-weight:700}.print-tools .primary,.print-actions .primary{background:#173b70;color:#fff}.print-count{font-size:12px;color:#475569}.print-overlay{display:none;position:fixed;inset:0;background:#0009;z-index:10000;overflow:auto;padding:12px}.print-overlay.open{display:flex;align-items:flex-start;justify-content:center}.print-dialog{background:#f1f5f9;border-radius:12px;padding:15px;max-width:100%;box-shadow:0 10px 40px #0003}.print-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}.print-note{font-size:12px;line-height:1.5;margin:8px 0;color:#475569;max-width:520px}.sheet-viewport{overflow:auto;max-width:100%}.print-sheet{width:152.4mm;height:92mm;display:grid;grid-template-columns:repeat(2,76.2mm);grid-template-rows:repeat(2,46mm);background:white;box-sizing:border-box;position:relative;box-shadow:0 2px 10px #0002}.print-cell{display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}.print-cell img{display:block;max-width:none;max-height:none;object-fit:contain}.print-cell .empty{font-size:11px;color:#c0c8d3}@page{size:6in 4in;margin:0}@media print{html,body{width:152.4mm!important;height:101.6mm!important;margin:0!important;padding:0!important;background:white!important;overflow:hidden!important}body>header,body>main{display:none!important}.print-overlay{display:block!important;position:static!important;background:white!important;padding:0!important;margin:0!important;overflow:visible!important}.print-dialog{background:white!important;padding:0!important;margin:0!important;box-shadow:none!important;border-radius:0!important}.print-actions,.print-note{display:none!important}.sheet-viewport{overflow:visible!important;max-width:none!important}.print-sheet{width:152.4mm!important;height:92mm!important;margin:0!important;box-shadow:none!important;page-break-inside:avoid!important;break-inside:avoid!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.print-cell .empty{display:none!important}}
+
+/* iPad横向き：左に3D、右に塗り絵。縦向きは従来の上下配置。 */
+@media (orientation: landscape) and (min-width: 700px) {
+  main { flex-direction: row; height: calc(100dvh - 44px); min-height: 0; overflow: hidden; }
+  .viewer { flex: 0 0 60%; min-width: 0; min-height: 0; height: 100%; }
+  .panel { flex: 0 0 40%; min-width: 0; min-height: 0; height: 100%;
+           overflow-y: auto; overscroll-behavior: contain;
+           display: flex; flex-direction: column; gap: 5px; }
+  .drawing { flex: 0 0 auto; height: min(46dvh, 330px);
+             width: 100%; margin: 5px auto; }
+  .tools { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;align-items:stretch; }
+  .tools > label,.tools > button {min-width:0;display:flex;align-items:center;justify-content:center;gap:5px;min-height:40px;}
+  .tools input[type=range]{width:65px;min-width:0;}
+  .print-tools { margin-top: 0; }
+  .hint { margin-top: 2px; }
+}
+
+/* 運営操作は体験者向けの描画操作から離し、初期状態では非表示 */
+.staff-zone{margin-top:auto;padding:12px 0 3px;border-top:2px solid #d5deea;}
+.staff-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;}
+.staff-label{font-size:11px;color:#718096;font-weight:700;}
+#staffUnlock{border:1px dashed #9baabd;background:#f3f6fa;color:#526276;border-radius:8px;padding:9px 11px;font-size:12px;font-weight:700;touch-action:none;user-select:none;-webkit-user-select:none;}
+#staffControls[hidden],#staffUnlock[hidden],#staffLock[hidden]{display:none!important;}
+#staffControls{padding-top:10px;justify-content:flex-start;}
+#staffLock{background:#edf2f7;color:#526276;}
+@media (orientation: landscape) and (min-width: 700px){
+  .panel{padding:9px 12px max(9px,env(safe-area-inset-bottom));}
+  .drawing{max-width:100%;}
+  .hint{order:1;}
+  .staff-zone{order:2;}
+  .tools{order:0;}
+  .print-tools button{font-size:12px;padding:8px;}
+}
+
+/* --- 未来のデザインスタジオ：見た目だけの変更 --- */
+:root{--sky-ink:#18527d;--sky-blue:#2d85bb;--orange:#ffb64e;--soft-blue:#e9f6ff}
+body{background:#e6f4ff;color:#26475f}
+header{height:44px;display:flex;align-items:center;justify-content:center;padding:6px 10px;background:linear-gradient(105deg,#d8f1ff 0%,#f7fbff 53%,#fff1d4 100%);color:#17547f;letter-spacing:.035em;font-size:17px;border-bottom:2px solid #ffffff;box-shadow:0 2px 9px #599cc522;position:relative;z-index:2}
+header::before{content:'✦';position:absolute;left:16px;color:#ffac37;font-size:20px}
+header::after{content:'✦';position:absolute;right:16px;color:#ffac37;font-size:17px}
+.viewer{background:#eaf2fb;overflow:hidden}
+.resetView{z-index:4!important;background:#fffffff0!important;color:#21658b;border:1px solid #b4dcec!important;border-radius:24px!important;box-shadow:0 3px 12px #306d9424;font-size:12px}
+.panel{background:linear-gradient(160deg,#f5fbff 0%,#eaf7ff 60%,#fff8ec 100%);border-left:2px solid #fff;box-shadow:-5px 0 20px #1e6f9a16}
+.tabs{gap:8px}
+.tabs button{flex:1;min-height:40px;background:#e6f4fc;border:1px solid #b9e0f3;color:#3a7194;border-radius:14px;font-size:14px;box-shadow:0 2px 5px #276b9511;transition:background .12s}
+.tabs button.active{background:linear-gradient(125deg,#ffca73,#ffab46);border-color:#f9a639;color:#68400b;box-shadow:0 3px 8px #e89c453b}
+.drawing{filter:drop-shadow(0 3px 9px #3e80a321)}
+#draw{border:3px solid #c6e6f7;border-radius:14px;box-shadow:0 3px 12px #437fa420}
+.tools button,.tools label{border:1px solid #c2e1f0;border-radius:13px;background:#e9f6ff;color:#256587;font-weight:750;box-shadow:0 2px 6px #2d80ae14;padding:8px 10px}
+.tools button.active{background:linear-gradient(135deg,#ffda94,#ffbd5c);border-color:#f9b653;color:#784808;box-shadow:0 3px 9px #eaa74440}
+.tools button:active,.tabs button:active{transform:scale(.98)}
+.tools #eraser:not(.active){background:#e9f6ff;border-color:#c2e1f0;color:#256587}
+.tools #undo:not(.active){background:#e9f6ff;border-color:#c2e1f0;color:#256587}
+.tools #clear:not(.active){background:#e9f6ff;border-color:#c2e1f0;color:#256587}
+.tools input[type=color]{border:2px solid white;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px #426c8520;cursor:pointer}
+.tools input[type=range]{accent-color:#ffab42}
+.staff-zone{border-top:2px dashed #c4ddeb;padding-top:12px}
+.staff-label{color:#7394a8}
+#staffUnlock{background:#f2f8fc;color:#6b899b;border-color:#b6cedc;border-radius:11px}
+#staffLock{background:#e5f0f8;color:#4c7289;border-radius:11px}
+.print-tools button,.print-actions button{border-radius:11px}
+.print-tools .primary,.print-actions .primary{background:#267db2;border-color:#267db2}
+@media (orientation: landscape) and (min-width:700px){.panel{gap:6px}.tools button,.tools label{padding:7px 5px;font-size:12px}.tabs button{min-height:38px}}
+@media print{header::before,header::after{display:none!important}}
+</style></head><body><header>空飛ぶクルマをデザインしよう！</header><main><section class="viewer" id="viewer"><a-scene embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" renderer="colorManagement: true; antialias: true" background="color: #eaf2fb"><a-entity id="aircraft" gltf-model="url(models/aircraft_coloring.glb)"></a-entity><a-entity id="cameraRig" position="0 0 8"><a-camera id="camera" look-controls="enabled: false" wasd-controls="enabled: false" fov="45"></a-camera></a-entity><a-entity light="type: ambient; intensity: 1.5"></a-entity><a-entity light="type: directional; intensity: 1.5" position="-3 7 5"></a-entity><a-entity light="type: directional; intensity: 0.7" position="5 3 -4"></a-entity></a-scene><div class="status" id="status">機体を読み込み中...</div><button class="resetView" id="resetView">視点を戻す</button></section><section class="panel"><div class="tabs"><button class="active" data-part="top">上面（翼）</button><button data-part="side">側面（胴体）</button></div><div class="drawing" data-view="top"><canvas id="draw" width="1024" height="1024"></canvas>
+<div class="guide top" aria-hidden="true"><img src="images/aircraft_top_guide.png" alt="" style="display:block;width:100%;height:100%"></div>
+<div class="guide side" aria-hidden="true"><img src="images/aircraft_side_guide.png" alt="" style="display:block;width:100%;height:100%"></div></div><div class="tools"><label>色 <input type="color" id="color" value="#ed5247"></label><label>太さ <input type="range" id="size" min="3" max="90" value="22"></label><button id="pen" class="active">ペン</button><button id="eraser">消しゴム</button><button id="undo">元に戻す</button><button id="clear">全消去</button></div><div class="staff-zone" id="staffZone"><div class="staff-bar"><span class="staff-label">運営スタッフ専用</span><button type="button" id="staffLock" hidden>操作を隠す</button><button type="button" id="staffUnlock" aria-expanded="false">長押しで操作を表示（1秒）</button></div><div class="print-tools" id="staffControls" hidden><button class="primary" id="addPrint">印刷待ちに追加</button><button id="showPrint">4×6シールを印刷</button><button id="clearPrint">印刷待ちを空にする</button><span class="print-count" id="printCount">0 / 4 機</span></div></div></section></main><div class="print-overlay" id="printOverlay" role="dialog" aria-label="A6印刷プレビュー"><div class="print-dialog"><div class="print-actions"><strong>4×6インチ横・4機分の印刷プレビュー</strong><button class="primary" id="doPrint">印刷する</button><button id="closePrint">閉じる</button></div><div class="sheet-viewport"><div class="print-sheet" id="printSheet"><div class="print-cell"></div><div class="print-cell"></div><div class="print-cell"></div><div class="print-cell"></div></div></div></div></div><script>(()=>{'use strict';const $=s=>document.querySelector(s);const status=$('#status'),viewer=$('#viewer'),aircraft=$('#aircraft'),rig=$('#cameraRig'),draw=$('#draw'),ctx=draw.getContext('2d');const layers={};for(const part of ['top','side']){const canvas=document.createElement('canvas');canvas.width=canvas.height=1024;const c=canvas.getContext('2d');c.fillStyle='#ffffff';c.fillRect(0,0,1024,1024);const textureCanvas=document.createElement('canvas');textureCanvas.width=textureCanvas.height=1024;const textureCtx=textureCanvas.getContext('2d');const texture=new THREE.CanvasTexture(textureCanvas);texture.flipY=false;texture.colorSpace=THREE.SRGBColorSpace;texture.needsUpdate=true;layers[part]={canvas,ctx:c,textureCanvas,textureCtx,texture,history:[]};}
+const sideGuideImage=new Image();sideGuideImage.onload=()=>{if(active==='side')refresh();};sideGuideImage.src='images/aircraft_side_guide.png';const sideOverlayCanvas=document.createElement('canvas');sideOverlayCanvas.width=sideOverlayCanvas.height=1024;const sideOverlayCtx=sideOverlayCanvas.getContext('2d');const sideOutlineCanvas=document.createElement('canvas');sideOutlineCanvas.width=sideOutlineCanvas.height=1024;const sideOutlineCtx=sideOutlineCanvas.getContext('2d');function buildSideOutline(){sideOutlineCtx.clearRect(0,0,1024,1024);sideOutlineCtx.drawImage(sideGuideImage,0,0,1024,1024);const im=sideOutlineCtx.getImageData(0,0,1024,1024),d=im.data;for(let i=0;i<d.length;i+=4){const a=d[i+3];if(a===0)continue;const luminance=.2126*d[i]+.7152*d[i+1]+.0722*d[i+2];if(luminance>=175){d[i+3]=0;}else{d[i+3]=Math.round(a*Math.min(1,(190-luminance)/35));}}sideOutlineCtx.putImageData(im,0,0);}let active='top',mode='pen',drawing=false,last=null,model=null,center=new THREE.Vector3(),radius=1;let yaw=-0.491592653589793,pitch=.53,distance=8,initialDistance=8;function cameraUpdate(){if(!model)return;const camera=$('#camera').getObject3D('camera');if(!camera)return;rig.object3D.rotation.set(0,0,0);rig.object3D.position.set(center.x+distance*Math.cos(pitch)*Math.sin(yaw),center.y+distance*Math.sin(pitch),center.z+distance*Math.cos(pitch)*Math.cos(yaw));$('#camera').object3D.position.set(0,0,0);$('#camera').object3D.rotation.set(0,0,0);rig.object3D.updateMatrixWorld(true);camera.lookAt(center);camera.updateMatrixWorld(true);}function resetView(){yaw=-.491592653589793;pitch=.53;distance=initialDistance;cameraUpdate();}$('#resetView').onclick=resetView;function refresh(){ctx.clearRect(0,0,1024,1024);ctx.drawImage(layers[active].canvas,0,0);const layer=layers[active];const tc=layer.textureCtx;tc.setTransform(1,0,0,1,0,0);tc.clearRect(0,0,1024,1024);if(active==='top'){tc.setTransform(-1,0,0,1,1024,0);}tc.drawImage(layer.canvas,0,0);tc.setTransform(1,0,0,1,0,0);layer.texture.needsUpdate=true;}function save(){const l=layers[active];l.history.push(l.ctx.getImageData(0,0,1024,1024));if(l.history.length>12)l.history.shift();}function switchPart(part){active=part;document.querySelector('.drawing').dataset.view=part;document.querySelectorAll('[data-part]').forEach(b=>b.classList.toggle('active',b.dataset.part===part));refresh();}document.querySelectorAll('[data-part]').forEach(b=>b.onclick=()=>switchPart(b.dataset.part));function setMode(m){mode=m;$('#pen').classList.toggle('active',m==='pen');$('#eraser').classList.toggle('active',m==='eraser');}$('#pen').onclick=()=>setMode('pen');$('#eraser').onclick=()=>setMode('eraser');$('#undo').onclick=()=>{const l=layers[active];if(l.history.length){l.ctx.putImageData(l.history.pop(),0,0);refresh();}};$('#clear').onclick=()=>{save();const l=layers[active];l.ctx.fillStyle='white';l.ctx.fillRect(0,0,1024,1024);refresh();};function point(e){const r=draw.getBoundingClientRect();return{x:(e.clientX-r.left)*1024/r.width,y:(e.clientY-r.top)*1024/r.height};}function stroke(a,b){const l=layers[active],c=l.ctx;c.strokeStyle=mode==='eraser'?'#ffffff':$('#color').value;c.lineWidth=Number($('#size').value);c.lineCap='round';c.lineJoin='round';c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();refresh();}draw.addEventListener('pointerdown',e=>{e.preventDefault();draw.setPointerCapture(e.pointerId);save();drawing=true;last=point(e);stroke(last,last);});draw.addEventListener('pointermove',e=>{if(!drawing)return;e.preventDefault();const p=point(e);stroke(last,p);last=p;});function end(){drawing=false;last=null;}draw.addEventListener('pointerup',end);draw.addEventListener('pointercancel',end);aircraft.addEventListener('model-loaded',e=>{model=e.detail.model;let assigned=0;model.traverse(obj=>{if(!obj.isMesh)return;const old=Array.isArray(obj.material)?obj.material:[obj.material];const mapped=old.map(mat=>{if(!mat)return mat;const part=mat.name==='M_Paint_Top'?'top':mat.name==='M_Paint_Side'?'side':null;if(!part)return mat;const clone=mat.clone();const channel=mat.map?.channel??0;clone.map=layers[part].texture.clone();clone.map.channel=channel;clone.map.flipY=false;clone.map.colorSpace=THREE.SRGBColorSpace;clone.map.needsUpdate=true;clone.color.set('#ffffff');clone.transparent=false;clone.opacity=1;clone.needsUpdate=true;layers[part].textures??=[];layers[part].textures.push(clone.map);assigned++;return clone;});obj.material=Array.isArray(obj.material)?mapped:mapped[0];});for(const part of ['top','side']){const original=layers[part].texture;layers[part].texture={set needsUpdate(v){if(v)for(const tex of layers[part].textures||[])tex.needsUpdate=true;}};original.dispose();}model.updateMatrixWorld(true);const bounds=new THREE.Box3().setFromObject(model),size=bounds.getSize(new THREE.Vector3());center=bounds.getCenter(new THREE.Vector3());radius=Math.max(size.length()/2,.01);const camera=$('#camera').getObject3D('camera');const fov=((camera?.fov)||45)*Math.PI/180,aspect=Math.max(viewer.clientWidth/Math.max(viewer.clientHeight,1),.2);initialDistance=Math.max(radius/Math.sin(Math.min(fov,2*Math.atan(Math.tan(fov/2)*aspect))/2)*1.15/1.6,.5);resetView();status.style.display="none";refresh();});aircraft.addEventListener('model-error',()=>{status.style.display='block';status.textContent='GLBを読み込めません。modelsフォルダを確認してください。';});// ---- A6ラベルシール印刷（3Dモデル上面をオルソ投影で撮影） ----
+// 印刷専用プロペラ：元の3Dプロペラを一時的に非表示にして、上面画像を合成。
+// 位置は機体全体の上面バウンディングボックスに対する比率。GLBに応じて微調整可能。
+const PRINT_PROPELLER={
+ image:'images/propeller.png',
+ widthFraction:.145,
+ // 実際のGLBではプロペラ部品名が SubdivFace#... なので、材質と形状で識別。
+ // Carbon材質で、細長いブレード8個と小さいハブ8個を検出する。
+ carbonMaterial:'Carbon'
+};
+function findPrintRotorParts(root){
+ const blades=[],hubs=[];
+ root.traverse(obj=>{
+  if(!obj.isMesh||!obj.geometry)return;
+  const mats=Array.isArray(obj.material)?obj.material:[obj.material];
+  if(!mats.some(m=>m&&m.name===PRINT_PROPELLER.carbonMaterial))return;
+  const geo=obj.geometry;
+  if(!geo.boundingBox)geo.computeBoundingBox();
+  const size=geo.boundingBox.getSize(new THREE.Vector3());
+  const dims=[size.x,size.y,size.z].sort((a,b)=>a-b);
+  // ブレード：おおむね14×125×144、ハブ：12×24×24（GLB実測値）。
+  if(dims[2]>75&&dims[1]>60&&dims[0]<35)blades.push(obj);
+  else if(dims[2]<40&&dims[1]<40&&dims[0]<35)hubs.push(obj);
+ });
+ return {blades,hubs};
+}
+const printPropellerImage=new Image();
+printPropellerImage.src=PRINT_PROPELLER.image;
+const printQueue=[];
+function captureTopForSticker(){
+ if(!model)throw new Error('機体の読み込みが完了していません');
+ const sceneEl=$('a-scene'),renderer=sceneEl.renderer;
+ if(!renderer)throw new Error('3D描画が準備中です');
+ model.updateMatrixWorld(true);
+ const box=new THREE.Box3().setFromObject(model),sz=box.getSize(new THREE.Vector3()),mid=box.getCenter(new THREE.Vector3());
+ if(sz.x<.001||sz.z<.001)throw new Error('機体サイズを取得できません');
+ // Z=翼幅50mm、X=全長。周囲3mmの余白を含めて56mm幅で撮影。
+ const wingMM=50,marginMM=3,printWidthMM=wingMM+2*marginMM;
+ const printHeightMM=wingMM*sz.x/sz.z+2*marginMM;
+ const captureWidth=1120,captureHeight=Math.round(captureWidth*printHeightMM/printWidthMM);
+ const worldWidth=sz.z*printWidthMM/wingMM;
+ const worldHeight=sz.z*printHeightMM/wingMM;
+ const cam=new THREE.OrthographicCamera(-worldWidth/2,worldWidth/2,worldHeight/2,-worldHeight/2,.01,Math.max(sz.y*8,100));
+ cam.position.set(mid.x,box.max.y+Math.max(sz.y*2,10),mid.z);
+ cam.up.set(1,0,0);cam.lookAt(mid);cam.updateProjectionMatrix();cam.updateMatrixWorld(true);
+ const rt=new THREE.WebGLRenderTarget(captureWidth,captureHeight,{depthBuffer:true,stencilBuffer:false});
+ const colorPixels=new Uint8Array(captureWidth*captureHeight*4);
+ const maskPixels=new Uint8Array(captureWidth*captureHeight*4);
+ const prevTarget=renderer.getRenderTarget(),prevClear=renderer.getClearColor(new THREE.Color()),prevAlpha=renderer.getClearAlpha();
+ const prevXR=renderer.xr.enabled,prevShadow=renderer.shadowMap.enabled;
+ // iPad Retina (devicePixelRatio=2/3) では、WebGLのオフスクリーン描画範囲が
+ // 実際のRenderTargetの2倍以上になり、左下の約1/4しか取得できない場合がある。
+ // 印刷画像生成中だけレンダラーのピクセル比を1に固定する。
+ const previousPixelRatio=renderer.getPixelRatio();
+ const viewport=new THREE.Vector4(),scissor=new THREE.Vector4();renderer.getViewport(viewport);renderer.getScissor(scissor);const scissorTest=renderer.getScissorTest();
+ const bg=sceneEl.object3D.background,override=sceneEl.object3D.overrideMaterial;
+ // GLBの実際のメッシュ形状とCarbon材質で元の8基のブレードとハブを特定。
+ const rotorParts=findPrintRotorParts(model);
+ if(rotorParts.blades.length!==8||rotorParts.hubs.length!==8){
+  throw new Error('プロペラ部品の検出数が想定と異なります（羽根'+rotorParts.blades.length+'、ハブ'+rotorParts.hubs.length+'）。印刷は中止しました。');
+ }
+ // ナセルのメッシュ検出には依存しない。実際の元プロペラのハブ8個を基準にする。
+ // ハブのワールド座標の外接箱を求め、ナセルと接する側の面の中心を採用。
+ // 羽根の重心から遠い側が取り付け面に当たるため、X軸方向の面を選択する。
+ const propCenters=rotorParts.hubs.map(hub=>{
+  const hb=new THREE.Box3().setFromObject(hub);
+  const hc=hb.getCenter(new THREE.Vector3());
+  let nearestBlade=null,nearestDist=Infinity;
+  for(const blade of rotorParts.blades){
+   const bc=new THREE.Box3().setFromObject(blade).getCenter(new THREE.Vector3());
+   const d=bc.distanceToSquared(hc);
+   if(d<nearestDist){nearestDist=d;nearestBlade=bc;}
+  }
+  // 羽根がハブのX軸正方向にある場合は負方向の面を取り付け面とする。
+  // 羽根の重心がハブ中心とほぼ同じX座標なら、ハブ中心を採用して過補正を避ける。
+  const delta=nearestBlade?nearestBlade.x-hc.x:0;
+  const faceX=Math.abs(delta)>1e-3?(delta>0?hb.min.x:hb.max.x):hc.x;
+  // 印刷用プロペラを、機体の前後方向の中心へ少し寄せる。
+  // 前翼の前後幅の約半分を目安に、機体全長の6%を移動量とする。
+  // 位置は印刷画像だけに反映され、GLBや塗り絵用UVには影響しない。
+  const PROPELLER_INWARD_SHIFT_RATIO=0.06;
+  // 前翼（機首側・X座標が小さい側）は前回の移動方向を維持する。
+  // 後翼（機尾側・X座標が大きい側）は前回と逆方向に移動する。
+  const isFrontWing=faceX<mid.x;
+  const previousShiftX=Math.sign(mid.x-faceX)*sz.x*PROPELLER_INWARD_SHIFT_RATIO;
+  const shiftX=isFrontWing?previousShiftX:-previousShiftX;
+  const point=new THREE.Vector3(faceX+shiftX,hc.y,hc.z);
+  const projected=point.project(cam);
+  return [(projected.x+1)*captureWidth/2,(1-projected.y)*captureHeight/2];
+ });
+ const hiddenRotors=[...rotorParts.blades,...rotorParts.hubs];
+ hiddenRotors.forEach(obj=>obj.visible=false);
+ const silhouetteMaterial=new THREE.MeshBasicMaterial({color:0x000000,side:THREE.DoubleSide});
+ try{
+  renderer.xr.enabled=false;renderer.shadowMap.enabled=false;
+   renderer.setPixelRatio(1);
+  sceneEl.object3D.background=new THREE.Color(0xffffff);
+  renderer.setRenderTarget(rt);renderer.setViewport(0,0,captureWidth,captureHeight);renderer.setScissorTest(false);
+  renderer.setClearColor(0xffffff,1);renderer.clear(true,true,true);
+  renderer.render(sceneEl.object3D,cam);
+  renderer.readRenderTargetPixels(rt,0,0,captureWidth,captureHeight,colorPixels);
+  // 着色とは独立した黒シルエットをレンダリングし、白い機体でも輪郭を確実に抽出。
+  sceneEl.object3D.overrideMaterial=silhouetteMaterial;
+  renderer.clear(true,true,true);renderer.render(sceneEl.object3D,cam);
+  renderer.readRenderTargetPixels(rt,0,0,captureWidth,captureHeight,maskPixels);
+ }finally{
+  sceneEl.object3D.overrideMaterial=override;sceneEl.object3D.background=bg;
+  renderer.setRenderTarget(prevTarget);
+   renderer.setPixelRatio(previousPixelRatio);
+   renderer.setViewport(viewport);renderer.setScissor(scissor);renderer.setScissorTest(scissorTest);
+  renderer.setClearColor(prevClear,prevAlpha);renderer.xr.enabled=prevXR;renderer.shadowMap.enabled=prevShadow;
+  hiddenRotors.forEach(obj=>obj.visible=true);
+  silhouetteMaterial.dispose();rt.dispose();
+ }
+ const c=document.createElement('canvas');c.width=captureWidth;c.height=captureHeight;
+ const cc=c.getContext('2d');const color=cc.createImageData(c.width,c.height);
+ for(let y=0;y<c.height;y++){
+  const from=(c.height-1-y)*c.width*4,to=y*c.width*4;
+  color.data.set(colorPixels.subarray(from,from+c.width*4),to);
+ }
+ cc.putImageData(color,0,0);
+ // 元の3Dプロペラを除いた機体に、元ハブの取り付け面中心で平面プロペラを8基合成。
+ // 画像の透過領域は背景に影響しない。
+ if(!printPropellerImage.complete||!printPropellerImage.naturalWidth){
+  throw new Error('印刷用プロペラ画像を読み込めません：'+PRINT_PROPELLER.image);
+ }
+ const propW=c.width*PRINT_PROPELLER.widthFraction;
+ const propH=propW*printPropellerImage.naturalHeight/printPropellerImage.naturalWidth;
+ for(const [px,py] of propCenters){
+  cc.drawImage(printPropellerImage,px-propW/2,py-propH/2,propW,propH);
+ }
+ // 1/2解像度の二値マスクで輪郭処理。約0.1mm単位で計算。
+ const w=Math.ceil(c.width/2),h=Math.ceil(c.height/2),mask=new Uint8Array(w*h);
+ for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+  const sy=Math.min(c.height-1,y*2),sx=Math.min(c.width-1,x*2);
+  const k=((c.height-1-sy)*c.width+sx)*4;
+  mask[y*w+x]=(maskPixels[k]+maskPixels[k+1]+maskPixels[k+2]<330)?1:0;
+ }
+ // 輪郭の細かな凹凸を抑えるための小さな平滑化。
+ function smooth(m){const out=new Uint8Array(m.length);for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+  let count=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)count+=m[(y+dy)*w+x+dx];
+  out[y*w+x]=count>=5?1:0;
+ }return out;}
+ // 合成プロペラのアルファをマスクへ反映し、切り取り線もプロペラを囲む。
+ const pm=document.createElement('canvas');pm.width=w;pm.height=h;
+ const pc=pm.getContext('2d');
+ for(const [px,py] of propCenters){pc.drawImage(printPropellerImage,(px-propW/2)/2,(py-propH/2)/2,propW/2,propH/2);}
+ const pd=pc.getImageData(0,0,w,h).data;
+ for(let i=0;i<mask.length;i++)if(pd[i*4+3]>48)mask[i]=1;
+ const body=smooth(mask);
+ // 3mmオフセット：円形の膨張処理（縦横同距離、角を丸くする）。
+ const radiusPx=Math.round(marginMM*w/printWidthMM);
+ const expanded=new Uint8Array(w*h);
+ for(let dy=-radiusPx;dy<=radiusPx;dy++){
+  const dxMax=Math.floor(Math.sqrt(radiusPx*radiusPx-dy*dy));
+  for(let y=Math.max(0,-dy);y<Math.min(h,h-dy);y++){
+   let count=0;const src=y*w,dst=(y+dy)*w;
+   for(let x=0;x<Math.min(w,dxMax+1);x++)count+=body[src+x];
+   for(let x=0;x<w;x++){
+    if(count)expanded[dst+x]=1;
+    const remove=x-dxMax,add=x+dxMax+1;
+    if(remove>=0)count-=body[src+remove];
+    if(add<w)count+=body[src+add];
+   }
+  }
+ }
+ const outer=smooth(smooth(expanded));
+ // 2本の線を重ねる：機体そのものの外形線＋3mm外側の実線カットライン。
+ const edge=document.createElement('canvas');edge.width=w;edge.height=h;
+ const ec=edge.getContext('2d');const ed=ec.createImageData(w,h);
+ for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+  const i=y*w+x;
+  const outerEdge=outer[i]&&(!outer[i-1]||!outer[i+1]||!outer[i-w]||!outer[i+w]);
+  const bodyEdge=body[i]&&(!body[i-1]||!body[i+1]||!body[i-w]||!body[i+w]);
+  if(outerEdge||bodyEdge){const k=i*4;ed.data[k]=28;ed.data[k+1]=38;ed.data[k+2]=49;ed.data[k+3]=255;}
+ }
+ ec.putImageData(ed,0,0);
+ cc.imageSmoothingEnabled=true;cc.drawImage(edge,0,0,c.width,c.height);
+ return {url:c.toDataURL('image/png'),widthMM:printWidthMM,heightMM:printHeightMM,bodyHeightMM:wingMM*sz.x/sz.z};
+}
+function renderPrintSheet(){
+ const cells=[...document.querySelectorAll('#printSheet .print-cell')];
+ cells.forEach((cell,i)=>{cell.replaceChildren();const item=printQueue[i];if(!item){const e=document.createElement('span');e.className='empty';e.textContent='空き';cell.append(e);return;}const img=new Image();img.src=item.url;img.alt='機体'+(i+1);img.style.width=item.widthMM+'mm';img.style.height=item.heightMM+'mm';cell.append(img);});
+ $('#printCount').textContent=printQueue.length+' / 4 機';
+}
+ // 運営操作の誤タップ防止：2秒の長押しでのみ開く（短いタップは無効）。
+ const staffUnlock=$('#staffUnlock'),staffControls=$('#staffControls');
+ let staffTimer=null,staffOpened=false;
+ function cancelStaffHold(){if(staffTimer!==null){clearTimeout(staffTimer);staffTimer=null;}}
+ function showStaffControls(){staffOpened=true;staffControls.hidden=false;staffUnlock.hidden=true;$('#staffLock').hidden=false;staffUnlock.setAttribute('aria-expanded','true');}
+ staffUnlock.addEventListener('pointerdown',e=>{if(staffOpened)return;e.preventDefault();cancelStaffHold();staffTimer=setTimeout(()=>{staffTimer=null;showStaffControls();},1000);});
+ ['pointerup','pointercancel','pointerleave'].forEach(name=>staffUnlock.addEventListener(name,cancelStaffHold));
+ staffUnlock.addEventListener('contextmenu',e=>e.preventDefault());
+ staffUnlock.addEventListener('click',e=>e.preventDefault());
+ $('#staffLock').onclick=()=>{cancelStaffHold();staffOpened=false;staffControls.hidden=true;$('#staffLock').hidden=true;staffUnlock.hidden=false;staffUnlock.textContent='長押しで操作を表示（1秒）';staffUnlock.setAttribute('aria-expanded','false');};
+$('#addPrint').onclick=()=>{
+ if(printQueue.length>=4){alert('4機分が揃っています。印刷するか、印刷待ちを空にしてください。');return;}
+ try{const shot=captureTopForSticker();if(shot.heightMM>45){if(!confirm('切り取り余白込みの高さが約'+shot.heightMM.toFixed(1)+'mmで、枠の高さ46mmに近いため印刷時に切れる可能性があります。追加しますか？'))return;}printQueue.push(shot);renderPrintSheet();alert('印刷待ちに追加しました（'+printQueue.length+'/4機）');}
+ catch(err){console.error(err);alert('印刷用画像の作成に失敗しました：'+err.message);}
+};
+$('#showPrint').onclick=()=>{renderPrintSheet();$('#printOverlay').classList.add('open');};
+$('#closePrint').onclick=()=>$('#printOverlay').classList.remove('open');
+$('#doPrint').onclick=()=>{if(!printQueue.length){alert('まず「印刷待ちに追加」を押してください');return;}window.print();};
+$('#clearPrint').onclick=()=>{if(printQueue.length&&!confirm('印刷待ちの'+printQueue.length+'機を削除しますか？'))return;printQueue.length=0;renderPrintSheet();};
+renderPrintSheet();
+const pointers=new Map();let pinch=null;viewer.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;viewer.setPointerCapture(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});pinch=null;});viewer.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;const prev=pointers.get(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1){yaw-=(e.clientX-prev.x)*.006;pitch=Math.max(-1.35,Math.min(1.35,pitch+(e.clientY-prev.y)*.006));cameraUpdate();}else if(pointers.size===2){const p=[...pointers.values()],now=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);if(pinch)distance=Math.max(radius*.8,Math.min(radius*20,distance*pinch/now));pinch=now;cameraUpdate();}});function endPointer(e){pointers.delete(e.pointerId);pinch=null;}viewer.addEventListener('pointerup',endPointer);viewer.addEventListener('pointercancel',endPointer);viewer.addEventListener('wheel',e=>{e.preventDefault();distance=Math.max(radius*.8,Math.min(radius*20,distance*Math.exp(e.deltaY*.001)));cameraUpdate();},{passive:false});viewer.style.touchAction='none';window.addEventListener('resize',cameraUpdate);for(const part of ['top','side']){const layer=layers[part];layer.textureCtx.setTransform(1,0,0,1,0,0);layer.textureCtx.fillStyle='#ffffff';layer.textureCtx.fillRect(0,0,1024,1024);layer.texture.needsUpdate=true;}refresh();})();</script><script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(console.error));}</script></body></html>

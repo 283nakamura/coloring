@@ -1,0 +1,9 @@
+{
+  "name": "空飛ぶクルマをデザインしよう！",
+  "short_name": "空飛ぶクルマ",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#e6f4ff",
+  "theme_color": "#e6f4ff"
+}
