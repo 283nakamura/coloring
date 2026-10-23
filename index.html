@@ -345,7 +345,7 @@ function renderPrintSheet(){
  $('#staffLock').onclick=()=>{cancelStaffHold();staffOpened=false;staffControls.hidden=true;$('#staffLock').hidden=true;staffUnlock.hidden=false;staffUnlock.textContent='長押しで操作を表示（1秒）';staffUnlock.setAttribute('aria-expanded','false');};
 $('#addPrint').onclick=()=>{
  if(printQueue.length>=2){alert('2作品分が揃っています。印刷するか、印刷待ちを空にしてください。');return;}
- try{const shot=captureTopForSticker();if(shot.heightMM>45){if(!confirm('切り取り余白込みの高さが約'+shot.heightMM.toFixed(1)+'mmで、枠の高さ46mmに近いため印刷時に切れる可能性があります。追加しますか？'))return;}const sticker=makeNamedSticker(shot,aircraftName);printQueue.push(sticker);renderPrintSheet();alert('印刷待ちに追加しました（'+printQueue.length+'/2作品）');}
+ try{const shot=captureTopForSticker();if(shot.heightMM>45){if(!confirm('切り取り余白込みの高さが約'+shot.heightMM.toFixed(1)+'mmで、枠の高さ46mmに近いため印刷時に切れる可能性があります。追加しますか？'))return;}const scale=Math.min(1,44/shot.heightMM,72/shot.widthMM);printQueue.push({url:shot.url,widthMM:shot.widthMM*scale,heightMM:shot.heightMM*scale});renderPrintSheet();alert('印刷待ちに追加しました（'+printQueue.length+'/2作品）');}
  catch(err){console.error(err);alert('印刷用画像の作成に失敗しました：'+err.message);}
 };
 $('#showPrint').onclick=()=>{renderPrintSheet();$('#printOverlay').classList.add('open');};
@@ -382,4 +382,16 @@ renderPrintSheet();
  });
  $('#aircraftName').addEventListener('input',e=>{const v=Array.from(e.target.value);if(v.length>10)e.target.value=v.slice(0,10).join('');});$('#aircraftName').addEventListener('keydown',e=>{if(e.key==='Enter')$('#saveName').click();});
  setStep(0);
- const pointers=new Map();let pinch=null;viewer.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;viewer.setPointerCapture(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});pinch=null;});viewer.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;const prev=pointers.get(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1){yaw-=(e.clientX-prev.x)*.006;pitch=Math.max(-1.35,Math.min(1.35,pitch+(e.clientY-prev.y)*.006));cameraUpdate();}else if(pointers.size===2){const p=[...pointers.values()],now=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);if(pinch)distance=Math.max(radius*.8,Math.min(radius*20,distance*pinch/now));pinch=now;cameraUpdate();}});function endPointer(e){pointers.delete(e.pointerId);pinch=null;}viewer.addEventListener('pointerup',endPointer);viewer.addEventListener('pointercancel',endPointer);viewer.addEventListener('wheel',e=>{e.preventDefault();distance=Math.max(radius*.8,Math.min(radius*20,distance*Math.exp(e.deltaY*.001)));cameraUpdate();},{passive:false});viewer.style.touchAction='none';window.addEventListener('resize',cameraUpdate);for(const part of ['top','side']){const layer=layers[part];layer.textureCtx.setTransform(1,0,0,1,0,0);layer.textureCtx.fillStyle='#ffffff';layer.textureCtx.fillRect(0,0,1024,1024);layer.texture.needsUpdate=true;}refresh();})();</script><script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(console.error));}</script></body></html>
+ // 3Dビューは1本指で回転のみ。2本指ピンチによる拡大縮小を無効化。
+ const pointers=new Map();
+ viewer.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;e.preventDefault();viewer.setPointerCapture(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});});
+ viewer.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;e.preventDefault();const prev=pointers.get(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size!==1)return;yaw-=(e.clientX-prev.x)*.006;pitch=Math.max(-1.35,Math.min(1.35,pitch+(e.clientY-prev.y)*.006));cameraUpdate();});
+ function endPointer(e){pointers.delete(e.pointerId);}
+ viewer.addEventListener('pointerup',endPointer);viewer.addEventListener('pointercancel',endPointer);
+ // Safariのページ全体ピンチを防止。描画キャンバス内の独自ピンチ処理は維持。
+ document.addEventListener('gesturestart',e=>e.preventDefault(),{passive:false});
+ document.addEventListener('gesturechange',e=>e.preventDefault(),{passive:false});
+ document.addEventListener('gestureend',e=>e.preventDefault(),{passive:false});
+ document.addEventListener('touchmove',e=>{if(e.touches.length>=2&&!e.target.closest('.drawing'))e.preventDefault();},{passive:false});
+ viewer.style.touchAction='none';
+ window.addEventListener('resize',cameraUpdate);for(const part of ['top','side']){const layer=layers[part];layer.textureCtx.setTransform(1,0,0,1,0,0);layer.textureCtx.fillStyle='#ffffff';layer.textureCtx.fillRect(0,0,1024,1024);layer.texture.needsUpdate=true;}refresh();})();</script><script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(console.error));}</script></body></html>
