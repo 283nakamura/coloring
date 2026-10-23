@@ -427,7 +427,7 @@ function makeNamedSticker(shot,name){
  let font=Math.round(labelH*.62);g.textAlign='center';g.textBaseline='middle';
  do{g.font='900 '+font+'px system-ui,sans-serif';if(g.measureText(nameText).width<=labelW*.9)break;font-=2;}while(font>12);
  g.fillStyle='#153b73';g.fillText(nameText,w/2,y+labelH/2);
- const scale=Math.min(1,44/shot.heightMM,72/shot.widthMM);
+ const scale=Math.min(1.28,44/shot.heightMM,72/shot.widthMM);
  return {url:c.toDataURL('image/png'),widthMM:shot.widthMM*scale,heightMM:shot.heightMM*scale,name:nameText};
 }
 function renderPrintSheet(){
@@ -447,7 +447,7 @@ function renderPrintSheet(){
  $('#staffLock').onclick=()=>{cancelStaffHold();staffOpened=false;staffControls.hidden=true;$('#staffLock').hidden=true;staffUnlock.hidden=false;staffUnlock.textContent='長押しで操作を表示（1秒）';staffUnlock.setAttribute('aria-expanded','false');};
 $('#addPrint').onclick=()=>{
  if(printQueue.length>=2){alert('2作品分が揃っています。印刷するか、印刷待ちを空にしてください。');return;}
- try{const shot=captureTopForSticker();if(shot.heightMM>45){if(!confirm('切り取り余白込みの高さが約'+shot.heightMM.toFixed(1)+'mmで、枠の高さ46mmに近いため印刷時に切れる可能性があります。追加しますか？'))return;}const scale=Math.min(1,44/shot.heightMM,72/shot.widthMM);printQueue.push({url:shot.url,widthMM:shot.widthMM*scale,heightMM:shot.heightMM*scale});currentDesignQueued=true;renderPrintSheet();alert('印刷待ちに追加しました（'+printQueue.length+'/2作品）');}
+ try{const shot=captureTopForSticker();const scale=Math.min(1.28,44/shot.heightMM,72/shot.widthMM);printQueue.push({url:shot.url,widthMM:shot.widthMM*scale,heightMM:shot.heightMM*scale});currentDesignQueued=true;renderPrintSheet();alert('印刷待ちに追加しました（'+printQueue.length+'/2作品）');}
  catch(err){console.error(err);alert('印刷用画像の作成に失敗しました：'+err.message);}
 };
 $('#showPrint').onclick=()=>{renderPrintSheet();$('#printOverlay').classList.add('open');};
@@ -526,7 +526,7 @@ renderPrintSheet();
      if(printQueue.length>=2){alert('印刷待ちが2作品でいっぱいです。印刷するか、印刷待ちを空にしてから戻ってください。');return;}
      try{
        const shot=captureTopForSticker();
-       const scale=Math.min(1,44/shot.heightMM,72/shot.widthMM);
+       const scale=Math.min(1.28,44/shot.heightMM,72/shot.widthMM);
        printQueue.push({url:shot.url,widthMM:shot.widthMM*scale,heightMM:shot.heightMM*scale});
        currentDesignQueued=true;
        renderPrintSheet();
