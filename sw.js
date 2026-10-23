@@ -1,4 +1,4 @@
-const CACHE = 'aircraft-designer-v18';
+const CACHE = 'aircraft-designer-v19';
 const ASSETS = [
   './', './index.html', './manifest.json',
   './ar-colored.html',
