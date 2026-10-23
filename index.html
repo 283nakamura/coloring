@@ -203,21 +203,14 @@ body>.coach .coach-nav button{font-size:clamp(15px,1.6vw,19px)!important;font-we
 /* v12: event usability and safer staff controls */
 .drawing.pattern-step::after{content:'✎ 模様や文字を入れよう！'}
 body>.coach{position:relative}
-.zoom-help{flex:0 0 auto;max-width:145px;font-size:clamp(11px,1.2vw,14px);line-height:1.35;font-weight:800;color:#356581;background:#fff;border:1px solid #b9d9e9;border-radius:10px;padding:7px 9px;text-align:center}
 .completion-handoff{position:absolute;left:14px;bottom:12px;z-index:3;max-width:calc(100% - 570px);font-size:clamp(14px,1.7vw,20px);font-weight:900;color:#114c7b;background:#fff8d8;border:2px solid #ffca5b;border-radius:13px;padding:12px 16px;box-shadow:0 4px 15px #0002}
 .completion-staff-slot .start-over{position:static!important;bottom:auto!important;left:auto!important;z-index:auto;box-shadow:none;padding:9px 12px;font-size:clamp(13px,1.35vw,16px);white-space:nowrap}
-@media(max-width:850px){.completion-handoff{max-width:45%;font-size:13px;padding:8px 10px}.zoom-help{max-width:110px;font-size:11px;padding:6px}}
-@media(max-width:650px){.zoom-help{max-width:90px;font-size:10px;padding:5px}.completion-handoff{left:8px;bottom:8px;max-width:40%;font-size:11px;padding:6px}}
-@media print{.zoom-help,.completion-handoff{display:none!important}}
 
-/* v14: zoom guidance in the upper-right corner of the drawing panel */
-.panel{position:relative}
-.panel>.zoom-help{position:absolute;right:10px;top:8px;z-index:25;max-width:none;min-width:190px;display:block;font-size:clamp(12px,1.35vw,16px);line-height:1.45;padding:8px 12px;background:#fff8dd;border:2px solid #eab657;border-radius:12px;color:#20587c;font-weight:850;box-shadow:0 2px 7px #1d5b8124;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-.panel>.tabs:not([hidden]){margin-top:53px}
-@media(max-width:650px){.panel>.zoom-help{min-width:145px;right:5px;top:5px;font-size:11px;padding:5px 7px}.panel>.tabs:not([hidden]){margin-top:42px}}
-@media print{.panel>.zoom-help{display:none!important}}
+/* v15: browser zoom prevention without visible guidance */
+html,body,body>header,main,.panel,.viewer,.coach,.tools,.tabs,button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.drawing,.drawing *,.viewer a-scene,.viewer canvas{touch-action:none!important}
 </style></head><body><header>空飛ぶクルマをデザインしよう！</header>
-<main><section class="viewer" id="viewer"><a-scene embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" renderer="colorManagement: true; antialias: true" background="color: #eaf2fb"><a-entity id="aircraft" gltf-model="url(models/aircraft_coloring.glb)"></a-entity><a-entity id="cameraRig" position="0 0 8"><a-camera id="camera" look-controls="enabled: false" wasd-controls="enabled: false" fov="45"></a-camera></a-entity><a-entity light="type: ambient; intensity: 1.5"></a-entity><a-entity light="type: directional; intensity: 1.5" position="-3 7 5"></a-entity><a-entity light="type: directional; intensity: 0.7" position="5 3 -4"></a-entity></a-scene><div class="name-tag" id="nameTag"></div><div class="status" id="status">機体を読み込み中...</div><div class="view-actions"><button class="resetView" id="resetView">視点を戻す</button></div></section><section class="panel"><button type="button" class="zoom-help" id="zoomHelp" aria-label="画面の大きさを戻す。ここを2回タップしてね">画面の大きさが変になったら、<br>ここを2回タップしてね</button><div class="tabs" id="partTabs" hidden><button class="active" data-part="top">翼に描く</button><button data-part="side">胴体に描く</button></div><div class="drawing" data-view="top"><canvas id="draw" width="1024" height="1024"></canvas>
+<main><section class="viewer" id="viewer"><a-scene embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" renderer="colorManagement: true; antialias: true" background="color: #eaf2fb"><a-entity id="aircraft" gltf-model="url(models/aircraft_coloring.glb)"></a-entity><a-entity id="cameraRig" position="0 0 8"><a-camera id="camera" look-controls="enabled: false" wasd-controls="enabled: false" fov="45"></a-camera></a-entity><a-entity light="type: ambient; intensity: 1.5"></a-entity><a-entity light="type: directional; intensity: 1.5" position="-3 7 5"></a-entity><a-entity light="type: directional; intensity: 0.7" position="5 3 -4"></a-entity></a-scene><div class="name-tag" id="nameTag"></div><div class="status" id="status">機体を読み込み中...</div><div class="view-actions"><button class="resetView" id="resetView">視点を戻す</button></div></section><section class="panel"><div class="tabs" id="partTabs" hidden><button class="active" data-part="top">翼に描く</button><button data-part="side">胴体に描く</button></div><div class="drawing" data-view="top"><canvas id="draw" width="1024" height="1024"></canvas>
 <div class="guide top" aria-hidden="true"><img src="images/aircraft_top_guide.png" alt="" style="display:block;width:100%;height:100%"></div>
 <div class="guide side" aria-hidden="true"><img src="images/aircraft_side_guide.png" alt="" style="display:block;width:100%;height:100%"></div></div><div class="tools"><label>色 <input type="color" id="color" value="#ed5247"></label><label>太さ <input type="range" id="size" min="3" max="90" value="22"></label><button id="pen" class="active">ペン</button><button id="eraser">消しゴム</button><button id="undo">元に戻す</button><button id="clear">全消去</button></div><div class="name-panel" id="namePanel"><label for="aircraftName"><b>きみの機体の名前は？</b></label><div class="name-input-row"><input id="aircraftName" maxlength="10" placeholder="例：スカイフェニックス" autocomplete="off"><span class="name-suffix">号</span><button type="button" id="saveName">決定！</button></div></div><div class="staff-zone" id="staffZone" hidden><div class="staff-bar"><span class="staff-label">運営スタッフ専用</span><button type="button" id="staffLock" hidden>操作を隠す</button><button type="button" id="staffUnlock" aria-expanded="false">長押しで操作を表示（1秒）</button></div><div class="print-tools" id="staffControls" hidden><button class="primary" id="addPrint">印刷待ちに追加</button><button id="showPrint">4×6シールを印刷</button><button id="clearPrint">印刷待ちを空にする</button><button type="button" id="startOver" class="start-over">↩ はじめにもどる</button><span class="print-count" id="printCount">0 / 2 作品（各2枚）</span></div></div></section></main><div class="coach"><img src="images/sora_coach.png" alt="ソラ教官"><div class="coach-message" id="coachMessage" aria-live="polite">まずは右のキャンバスで翼に色をぬろう！</div><div class="coach-nav"><button class="coach-back" id="coachBack" disabled>◀ もどる</button><button class="coach-next" id="coachNext">つぎへ ▶</button></div></div>
 <div class="print-overlay" id="printOverlay" role="dialog" aria-label="A6印刷プレビュー"><div class="print-dialog"><div class="print-actions"><strong>4×6インチ横・2作品×2枚の印刷プレビュー</strong><button class="primary" id="doPrint">印刷する</button><button id="closePrint">閉じる</button></div><div class="sheet-viewport"><div class="print-sheet" id="printSheet"><div class="print-cell"></div><div class="print-cell"></div><div class="print-cell"></div><div class="print-cell"></div></div></div></div></div><div id="completionScreen" class="completion-screen" role="dialog" aria-modal="true" aria-label="空飛ぶクルマ完成" hidden>
@@ -602,5 +595,23 @@ renderPrintSheet();
  viewer.style.touchAction='none';
  window.addEventListener('resize',cameraUpdate);for(const part of ['top','side']){const layer=layers[part];layer.textureCtx.setTransform(1,0,0,1,0,0);layer.textureCtx.fillStyle='#ffffff';layer.textureCtx.fillRect(0,0,1024,1024);layer.texture.needsUpdate=true;}refresh();})();</script><script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(console.error));}</script><script>
 // Prevent WebKit double-tap zoom; do not interfere with the custom canvas pinch handler.
-(function(){let last=0;document.addEventListener('touchend',function(e){if(e.touches.length||e.changedTouches.length!==1)return;const t=e.target;if(t.closest('.drawing')||t.closest('input,textarea,select'))return;const now=Date.now();if(now-last<320){e.preventDefault();}last=now;},{passive:false});})();
+// v15: suppress iPad Safari double-tap page zoom across the entire app.
+// Keep native taps/clicks and the canvas's own two-finger pinch interaction.
+(function(){
+  let previous=null;
+  document.addEventListener('touchend',function(e){
+    if(e.touches.length || e.changedTouches.length!==1) { previous=null; return; }
+    const touch=e.changedTouches[0],now=Date.now();
+    const target=e.target;
+    // Text fields retain normal caret and selection behavior.
+    if(target.closest('input,textarea,select,[contenteditable="true"]')) { previous=null; return; }
+    const sameSpot=previous && now-previous.time<380 &&
+      Math.hypot(touch.clientX-previous.x,touch.clientY-previous.y)<45;
+    if(sameSpot){e.preventDefault();previous=null;}
+    else previous={time:now,x:touch.clientX,y:touch.clientY};
+  },{passive:false,capture:true});
+  document.addEventListener('dblclick',function(e){
+    if(!e.target.closest('input,textarea,select,[contenteditable="true"]'))e.preventDefault();
+  },{passive:false,capture:true});
+})();
 </script></body></html>

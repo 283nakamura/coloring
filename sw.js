@@ -1,4 +1,4 @@
-const CACHE = 'aircraft-designer-v14';
+const CACHE = 'aircraft-designer-v15';
 const ASSETS = [
   './', './index.html', './manifest.json',
   './vendor/aframe.min.js',
