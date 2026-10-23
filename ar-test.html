@@ -73,5 +73,19 @@
   <div class="note">
     ボタンを押して、机や床に機体を置いてみよう！
   </div>
+
+  <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', async () => {
+      try {
+        await navigator.serviceWorker.register('./sw.js');
+        console.log('Service Worker 登録完了');
+      } catch (error) {
+        console.error('Service Worker 登録失敗', error);
+      }
+    });
+  }
+  </script>
+  
 </body>
 </html>
