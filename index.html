@@ -82,12 +82,34 @@ header::after{content:'✦';position:absolute;right:16px;color:#ffac37;font-size
 .print-cell{flex-direction:column}.print-cell img{flex:0 1 auto}.sticker-name{font-size:10px;font-weight:800;color:#173b70;text-align:center;line-height:1.2;max-width:95%;overflow-wrap:anywhere}
 @media(orientation:landscape) and (min-width:700px){main{height:calc(100dvh - 151px)!important}.coach{min-height:55px}.drawing{height:min(38dvh,270px)}}
 @media print{.guide-flow,.coach{display:none!important}.sticker-name{font-size:9pt!important}}
+
+/* v3: 教官を主役にしたシンプルなナビゲーション */
+.guide-flow{display:none!important}
+.coach{min-height:94px;gap:12px;padding:8px 15px;background:linear-gradient(90deg,#e4f5ff,#fff7e5)}
+.coach img{width:78px;height:78px;object-fit:contain;border-radius:50%;border:3px solid #e6bb65;background:white;flex-shrink:0}
+.coach-message{position:relative;background:white;border:2px solid #9dcbe7;border-radius:18px;padding:12px 16px;font-size:clamp(13px,1.5vw,17px);box-shadow:0 3px 8px #25628a17}
+.coach-message::before{content:"";position:absolute;left:-12px;top:25px;width:18px;height:18px;background:white;border-left:2px solid #9dcbe7;border-bottom:2px solid #9dcbe7;transform:rotate(45deg)}
+.coach-nav{display:flex;flex-direction:column;gap:6px;min-width:98px}
+.coach-nav button{border-radius:10px;padding:8px 10px;font-weight:800;white-space:nowrap;font-size:13px}
+.coach-back{background:white;color:#225779;border:1px solid #a9c7d9}
+.coach-back:disabled{opacity:.35}
+.tabs[hidden]{display:none!important}
+.name-input-row{display:flex;align-items:center;gap:5px;flex:1;min-width:0}
+.name-panel{flex-wrap:nowrap;justify-content:space-between}
+.name-panel label{white-space:nowrap}
+.name-input-row input{flex:1;min-width:0;max-width:none}
+.name-suffix{font-weight:900;font-size:20px;color:#1c4c77}
+#saveName{background:#247cb3;color:white;border:0;border-radius:9px;padding:10px 15px;font-weight:900;white-space:nowrap}
+.name-tag{top:12px;bottom:auto;max-width:75%;font-size:clamp(16px,2.2vw,23px)}
+.print-cell{flex-direction:row}
+@media (orientation:landscape) and (min-width:700px){main{height:calc(100dvh - 138px)!important}.coach{min-height:94px}.drawing{height:min(40dvh,290px)}}
+@media(max-width:650px){.coach{gap:7px;padding:6px}.coach img{width:58px;height:58px}.coach-message{padding:9px;font-size:12px}.coach-nav{min-width:78px}.coach-nav button{padding:7px 5px;font-size:11px}.name-panel{flex-wrap:wrap}}
+@media print{.coach{display:none!important}}
 </style></head><body><header>空飛ぶクルマをデザインしよう！</header>
-<div class="guide-flow" id="guideFlow"><button class="step-btn active" data-step="0">① 翼をぬる</button><button class="step-btn" data-step="1">② 胴体をぬる</button><button class="step-btn" data-step="2">③ 模様・文字</button><button class="step-btn" data-step="3">④ 名前をつける</button></div>
-<div class="coach"><img src="images/sora_coach.png" alt="ソラ教官"><div class="coach-message" id="coachMessage" aria-live="polite">右のキャンバスで翼に色をぬってみよう！左の3Dモデルにも色がつくよ。</div><button class="coach-next" id="coachNext">つぎへ ▶</button></div>
-<main><section class="viewer" id="viewer"><a-scene embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" renderer="colorManagement: true; antialias: true" background="color: #eaf2fb"><a-entity id="aircraft" gltf-model="url(models/aircraft_coloring.glb)"></a-entity><a-entity id="cameraRig" position="0 0 8"><a-camera id="camera" look-controls="enabled: false" wasd-controls="enabled: false" fov="45"></a-camera></a-entity><a-entity light="type: ambient; intensity: 1.5"></a-entity><a-entity light="type: directional; intensity: 1.5" position="-3 7 5"></a-entity><a-entity light="type: directional; intensity: 0.7" position="5 3 -4"></a-entity></a-scene><div class="name-tag" id="nameTag"></div><div class="status" id="status">機体を読み込み中...</div><button class="resetView" id="resetView">視点を戻す</button></section><section class="panel"><div class="tabs"><button class="active" data-part="top">上面（翼）</button><button data-part="side">側面（胴体）</button></div><div class="drawing" data-view="top"><canvas id="draw" width="1024" height="1024"></canvas>
+<div class="coach"><img src="images/sora_coach.png" alt="ソラ教官"><div class="coach-message" id="coachMessage" aria-live="polite">まずは右のキャンバスで翼に色をぬろう！</div><div class="coach-nav"><button class="coach-back" id="coachBack" disabled>◀ もどる</button><button class="coach-next" id="coachNext">つぎへ ▶</button></div></div>
+<main><section class="viewer" id="viewer"><a-scene embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" renderer="colorManagement: true; antialias: true" background="color: #eaf2fb"><a-entity id="aircraft" gltf-model="url(models/aircraft_coloring.glb)"></a-entity><a-entity id="cameraRig" position="0 0 8"><a-camera id="camera" look-controls="enabled: false" wasd-controls="enabled: false" fov="45"></a-camera></a-entity><a-entity light="type: ambient; intensity: 1.5"></a-entity><a-entity light="type: directional; intensity: 1.5" position="-3 7 5"></a-entity><a-entity light="type: directional; intensity: 0.7" position="5 3 -4"></a-entity></a-scene><div class="name-tag" id="nameTag"></div><div class="status" id="status">機体を読み込み中...</div><button class="resetView" id="resetView">視点を戻す</button></section><section class="panel"><div class="tabs" id="partTabs" hidden><button class="active" data-part="top">翼に描く</button><button data-part="side">胴体に描く</button></div><div class="drawing" data-view="top"><canvas id="draw" width="1024" height="1024"></canvas>
 <div class="guide top" aria-hidden="true"><img src="images/aircraft_top_guide.png" alt="" style="display:block;width:100%;height:100%"></div>
-<div class="guide side" aria-hidden="true"><img src="images/aircraft_side_guide.png" alt="" style="display:block;width:100%;height:100%"></div></div><div class="tools"><label>色 <input type="color" id="color" value="#ed5247"></label><label>太さ <input type="range" id="size" min="3" max="90" value="22"></label><button id="pen" class="active">ペン</button><button id="eraser">消しゴム</button><button id="undo">元に戻す</button><button id="clear">全消去</button></div><div class="name-panel" id="namePanel"><label for="aircraftName"><b>きみの機体の名前は？</b></label><input id="aircraftName" maxlength="24" placeholder="例：スカイフェニックス" autocomplete="off"><button type="button" id="saveName">決定！</button></div><div class="staff-zone" id="staffZone"><div class="staff-bar"><span class="staff-label">運営スタッフ専用</span><button type="button" id="staffLock" hidden>操作を隠す</button><button type="button" id="staffUnlock" aria-expanded="false">長押しで操作を表示（1秒）</button></div><div class="print-tools" id="staffControls" hidden><button class="primary" id="addPrint">印刷待ちに追加</button><button id="showPrint">4×6シールを印刷</button><button id="clearPrint">印刷待ちを空にする</button><span class="print-count" id="printCount">0 / 2 作品（各2枚）</span></div></div></section></main><div class="print-overlay" id="printOverlay" role="dialog" aria-label="A6印刷プレビュー"><div class="print-dialog"><div class="print-actions"><strong>4×6インチ横・2作品×2枚の印刷プレビュー</strong><button class="primary" id="doPrint">印刷する</button><button id="closePrint">閉じる</button></div><div class="sheet-viewport"><div class="print-sheet" id="printSheet"><div class="print-cell"></div><div class="print-cell"></div><div class="print-cell"></div><div class="print-cell"></div></div></div></div></div><script>(()=>{'use strict';const $=s=>document.querySelector(s);const status=$('#status'),viewer=$('#viewer'),aircraft=$('#aircraft'),rig=$('#cameraRig'),draw=$('#draw'),ctx=draw.getContext('2d');const layers={};for(const part of ['top','side']){const canvas=document.createElement('canvas');canvas.width=canvas.height=1024;const c=canvas.getContext('2d');c.fillStyle='#ffffff';c.fillRect(0,0,1024,1024);const textureCanvas=document.createElement('canvas');textureCanvas.width=textureCanvas.height=1024;const textureCtx=textureCanvas.getContext('2d');const texture=new THREE.CanvasTexture(textureCanvas);texture.flipY=false;texture.colorSpace=THREE.SRGBColorSpace;texture.needsUpdate=true;layers[part]={canvas,ctx:c,textureCanvas,textureCtx,texture,history:[]};}
+<div class="guide side" aria-hidden="true"><img src="images/aircraft_side_guide.png" alt="" style="display:block;width:100%;height:100%"></div></div><div class="tools"><label>色 <input type="color" id="color" value="#ed5247"></label><label>太さ <input type="range" id="size" min="3" max="90" value="22"></label><button id="pen" class="active">ペン</button><button id="eraser">消しゴム</button><button id="undo">元に戻す</button><button id="clear">全消去</button></div><div class="name-panel" id="namePanel"><label for="aircraftName"><b>きみの機体の名前は？</b></label><div class="name-input-row"><input id="aircraftName" maxlength="23" placeholder="例：スカイフェニックス" autocomplete="off"><span class="name-suffix">号</span><button type="button" id="saveName">決定！</button></div></div><div class="staff-zone" id="staffZone"><div class="staff-bar"><span class="staff-label">運営スタッフ専用</span><button type="button" id="staffLock" hidden>操作を隠す</button><button type="button" id="staffUnlock" aria-expanded="false">長押しで操作を表示（1秒）</button></div><div class="print-tools" id="staffControls" hidden><button class="primary" id="addPrint">印刷待ちに追加</button><button id="showPrint">4×6シールを印刷</button><button id="clearPrint">印刷待ちを空にする</button><span class="print-count" id="printCount">0 / 2 作品（各2枚）</span></div></div></section></main><div class="print-overlay" id="printOverlay" role="dialog" aria-label="A6印刷プレビュー"><div class="print-dialog"><div class="print-actions"><strong>4×6インチ横・2作品×2枚の印刷プレビュー</strong><button class="primary" id="doPrint">印刷する</button><button id="closePrint">閉じる</button></div><div class="sheet-viewport"><div class="print-sheet" id="printSheet"><div class="print-cell"></div><div class="print-cell"></div><div class="print-cell"></div><div class="print-cell"></div></div></div></div></div><script>(()=>{'use strict';const $=s=>document.querySelector(s);const status=$('#status'),viewer=$('#viewer'),aircraft=$('#aircraft'),rig=$('#cameraRig'),draw=$('#draw'),ctx=draw.getContext('2d');const layers={};for(const part of ['top','side']){const canvas=document.createElement('canvas');canvas.width=canvas.height=1024;const c=canvas.getContext('2d');c.fillStyle='#ffffff';c.fillRect(0,0,1024,1024);const textureCanvas=document.createElement('canvas');textureCanvas.width=textureCanvas.height=1024;const textureCtx=textureCanvas.getContext('2d');const texture=new THREE.CanvasTexture(textureCanvas);texture.flipY=false;texture.colorSpace=THREE.SRGBColorSpace;texture.needsUpdate=true;layers[part]={canvas,ctx:c,textureCanvas,textureCtx,texture,history:[]};}
 const sideGuideImage=new Image();sideGuideImage.onload=()=>{if(active==='side')refresh();};sideGuideImage.src='images/aircraft_side_guide.png';const sideOverlayCanvas=document.createElement('canvas');sideOverlayCanvas.width=sideOverlayCanvas.height=1024;const sideOverlayCtx=sideOverlayCanvas.getContext('2d');const sideOutlineCanvas=document.createElement('canvas');sideOutlineCanvas.width=sideOutlineCanvas.height=1024;const sideOutlineCtx=sideOutlineCanvas.getContext('2d');function buildSideOutline(){sideOutlineCtx.clearRect(0,0,1024,1024);sideOutlineCtx.drawImage(sideGuideImage,0,0,1024,1024);const im=sideOutlineCtx.getImageData(0,0,1024,1024),d=im.data;for(let i=0;i<d.length;i+=4){const a=d[i+3];if(a===0)continue;const luminance=.2126*d[i]+.7152*d[i+1]+.0722*d[i+2];if(luminance>=175){d[i+3]=0;}else{d[i+3]=Math.round(a*Math.min(1,(190-luminance)/35));}}sideOutlineCtx.putImageData(im,0,0);}let active='top',mode='pen',drawing=false,last=null,model=null,center=new THREE.Vector3(),radius=1;let yaw=-0.491592653589793,pitch=.53,distance=8,initialDistance=8;function cameraUpdate(){if(!model)return;const camera=$('#camera').getObject3D('camera');if(!camera)return;rig.object3D.rotation.set(0,0,0);rig.object3D.position.set(center.x+distance*Math.cos(pitch)*Math.sin(yaw),center.y+distance*Math.sin(pitch),center.z+distance*Math.cos(pitch)*Math.cos(yaw));$('#camera').object3D.position.set(0,0,0);$('#camera').object3D.rotation.set(0,0,0);rig.object3D.updateMatrixWorld(true);camera.lookAt(center);camera.updateMatrixWorld(true);}function resetView(){yaw=-.491592653589793;pitch=.53;distance=initialDistance;cameraUpdate();}$('#resetView').onclick=resetView;function refresh(){ctx.clearRect(0,0,1024,1024);ctx.drawImage(layers[active].canvas,0,0);const layer=layers[active];const tc=layer.textureCtx;tc.setTransform(1,0,0,1,0,0);tc.clearRect(0,0,1024,1024);if(active==='top'){tc.setTransform(-1,0,0,1,1024,0);}tc.drawImage(layer.canvas,0,0);tc.setTransform(1,0,0,1,0,0);layer.texture.needsUpdate=true;}function save(){const l=layers[active];l.history.push(l.ctx.getImageData(0,0,1024,1024));if(l.history.length>12)l.history.shift();}function switchPart(part){active=part;document.querySelector('.drawing').dataset.view=part;document.querySelectorAll('[data-part]').forEach(b=>b.classList.toggle('active',b.dataset.part===part));refresh();}document.querySelectorAll('[data-part]').forEach(b=>b.onclick=()=>switchPart(b.dataset.part));function setMode(m){mode=m;$('#pen').classList.toggle('active',m==='pen');$('#eraser').classList.toggle('active',m==='eraser');}$('#pen').onclick=()=>setMode('pen');$('#eraser').onclick=()=>setMode('eraser');$('#undo').onclick=()=>{const l=layers[active];if(l.history.length){l.ctx.putImageData(l.history.pop(),0,0);refresh();}};$('#clear').onclick=()=>{save();const l=layers[active];l.ctx.fillStyle='white';l.ctx.fillRect(0,0,1024,1024);refresh();};function point(e){const r=draw.getBoundingClientRect();return{x:(e.clientX-r.left)*1024/r.width,y:(e.clientY-r.top)*1024/r.height};}function stroke(a,b){const l=layers[active],c=l.ctx;c.strokeStyle=mode==='eraser'?'#ffffff':$('#color').value;c.lineWidth=Number($('#size').value);c.lineCap='round';c.lineJoin='round';c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();refresh();}draw.addEventListener('pointerdown',e=>{if(e.pointerType!=='pen')return;e.preventDefault();draw.setPointerCapture(e.pointerId);save();drawing=true;last=point(e);stroke(last,last);});draw.addEventListener('pointermove',e=>{if(e.pointerType!=='pen'||!drawing)return;e.preventDefault();const p=point(e);stroke(last,p);last=p;});function end(){drawing=false;last=null;}draw.addEventListener('pointerup',end);draw.addEventListener('pointercancel',end);aircraft.addEventListener('model-loaded',e=>{model=e.detail.model;let assigned=0;model.traverse(obj=>{if(!obj.isMesh)return;const old=Array.isArray(obj.material)?obj.material:[obj.material];const mapped=old.map(mat=>{if(!mat)return mat;const part=mat.name==='M_Paint_Top'?'top':mat.name==='M_Paint_Side'?'side':null;if(!part)return mat;const clone=mat.clone();const channel=mat.map?.channel??0;clone.map=layers[part].texture.clone();clone.map.channel=channel;clone.map.flipY=false;clone.map.colorSpace=THREE.SRGBColorSpace;clone.map.needsUpdate=true;clone.color.set('#ffffff');clone.transparent=false;clone.opacity=1;clone.needsUpdate=true;layers[part].textures??=[];layers[part].textures.push(clone.map);assigned++;return clone;});obj.material=Array.isArray(obj.material)?mapped:mapped[0];});for(const part of ['top','side']){const original=layers[part].texture;layers[part].texture={set needsUpdate(v){if(v)for(const tex of layers[part].textures||[])tex.needsUpdate=true;}};original.dispose();}model.updateMatrixWorld(true);const bounds=new THREE.Box3().setFromObject(model),size=bounds.getSize(new THREE.Vector3());center=bounds.getCenter(new THREE.Vector3());radius=Math.max(size.length()/2,.01);const camera=$('#camera').getObject3D('camera');const fov=((camera?.fov)||45)*Math.PI/180,aspect=Math.max(viewer.clientWidth/Math.max(viewer.clientHeight,1),.2);initialDistance=Math.max(radius/Math.sin(Math.min(fov,2*Math.atan(Math.tan(fov/2)*aspect))/2)*1.15/1.6,.5);resetView();status.style.display="none";refresh();});aircraft.addEventListener('model-error',()=>{status.style.display='block';status.textContent='GLBを読み込めません。modelsフォルダを確認してください。';});// ---- A6ラベルシール印刷（3Dモデル上面をオルソ投影で撮影） ----
 // 印刷専用プロペラ：元の3Dプロペラを一時的に非表示にして、上面画像を合成。
 // 位置は機体全体の上面バウンディングボックスに対する比率。GLBに応じて微調整可能。
@@ -266,11 +288,33 @@ function captureTopForSticker(){
  }
  ec.putImageData(ed,0,0);
  cc.imageSmoothingEnabled=true;cc.drawImage(edge,0,0,c.width,c.height);
- return {url:c.toDataURL('image/png'),widthMM:printWidthMM,heightMM:printHeightMM,bodyHeightMM:wingMM*sz.x/sz.z};
+ return {url:c.toDataURL('image/png'),canvas:c,widthMM:printWidthMM,heightMM:printHeightMM,bodyHeightMM:wingMM*sz.x/sz.z};
+}
+// 印刷用の作品名を機体の上側へ合成し、名前まで囲う外枠を1枚の画像として生成する。
+function makeNamedSticker(shot,name){
+ const nameText=name||'なまえなし号';
+ const extraMM=8, maxHeightMM=44, maxWidthMM=72;
+ const source=shot.canvas;
+ const scale= Math.min(1,maxHeightMM/(shot.heightMM+extraMM),maxWidthMM/shot.widthMM);
+ const widthMM=shot.widthMM*scale,heightMM=(shot.heightMM+extraMM)*scale;
+ const pixelsPerMM=20;
+ const w=Math.round(shot.widthMM*pixelsPerMM),h=Math.round((shot.heightMM+extraMM)*pixelsPerMM);
+ const c=document.createElement('canvas');c.width=w;c.height=h;
+ const g=c.getContext('2d');g.fillStyle='white';g.fillRect(0,0,w,h);
+ // 上部に名前。長い名前は幅に収まるよう自動縮小。
+ let font= Math.round(4.4*pixelsPerMM);
+ do {g.font='900 '+font+'px system-ui, sans-serif';if(g.measureText(nameText).width<=w-100)break;font-=2;}while(font>20);
+ g.textAlign='center';g.textBaseline='middle';g.fillStyle='#123c76';
+ g.fillText(nameText,w/2,Math.round(extraMM*pixelsPerMM/2));
+ g.drawImage(source,0,Math.round(extraMM*pixelsPerMM),w,Math.round(shot.heightMM*pixelsPerMM));
+ // 名前と機体の両方を含む一続きの外枠（切り取り線）。
+ const inset=9,r=18;g.strokeStyle='#263846';g.lineWidth=3;
+ g.beginPath();g.roundRect(inset,inset,w-inset*2,h-inset*2,r);g.stroke();
+ return {url:c.toDataURL('image/png'),widthMM,heightMM,name:nameText};
 }
 function renderPrintSheet(){
  const cells=[...document.querySelectorAll('#printSheet .print-cell')];
-  cells.forEach((cell,i)=>{cell.replaceChildren();const item=printQueue[Math.floor(i/2)];if(!item){const e=document.createElement('span');e.className='empty';e.textContent='空き';cell.append(e);return;}const img=new Image();img.src=item.url;img.alt='機体'+(Math.floor(i/2)+1);img.style.width=item.widthMM+'mm';img.style.height=item.heightMM+'mm';cell.append(img);if(item.name){const n=document.createElement('div');n.className='sticker-name';n.textContent=item.name;cell.append(n);}});
+  cells.forEach((cell,i)=>{cell.replaceChildren();const item=printQueue[Math.floor(i/2)];if(!item){const e=document.createElement('span');e.className='empty';e.textContent='空き';cell.append(e);return;}const img=new Image();img.src=item.url;img.alt='機体'+(Math.floor(i/2)+1);img.style.width=item.widthMM+'mm';img.style.height=item.heightMM+'mm';cell.append(img);});
   $('#printCount').textContent=printQueue.length+' / 2 作品（各2枚）';
 }
  // 運営操作の誤タップ防止：2秒の長押しでのみ開く（短いタップは無効）。
@@ -285,7 +329,7 @@ function renderPrintSheet(){
  $('#staffLock').onclick=()=>{cancelStaffHold();staffOpened=false;staffControls.hidden=true;$('#staffLock').hidden=true;staffUnlock.hidden=false;staffUnlock.textContent='長押しで操作を表示（1秒）';staffUnlock.setAttribute('aria-expanded','false');};
 $('#addPrint').onclick=()=>{
  if(printQueue.length>=2){alert('2作品分が揃っています。印刷するか、印刷待ちを空にしてください。');return;}
- try{const shot=captureTopForSticker();if(shot.heightMM>45){if(!confirm('切り取り余白込みの高さが約'+shot.heightMM.toFixed(1)+'mmで、枠の高さ46mmに近いため印刷時に切れる可能性があります。追加しますか？'))return;}shot.name=aircraftName;printQueue.push(shot);renderPrintSheet();alert('印刷待ちに追加しました（'+printQueue.length+'/2作品）');}
+ try{const shot=captureTopForSticker();if(shot.heightMM>45){if(!confirm('切り取り余白込みの高さが約'+shot.heightMM.toFixed(1)+'mmで、枠の高さ46mmに近いため印刷時に切れる可能性があります。追加しますか？'))return;}const sticker=makeNamedSticker(shot,aircraftName);printQueue.push(sticker);renderPrintSheet();alert('印刷待ちに追加しました（'+printQueue.length+'/2作品）');}
  catch(err){console.error(err);alert('印刷用画像の作成に失敗しました：'+err.message);}
 };
 $('#showPrint').onclick=()=>{renderPrintSheet();$('#printOverlay').classList.add('open');};
@@ -294,15 +338,32 @@ $('#doPrint').onclick=()=>{if(!printQueue.length){alert('まず「印刷待ち�
 $('#clearPrint').onclick=()=>{if(printQueue.length&&!confirm('印刷待ちの'+printQueue.length+'機を削除しますか？'))return;printQueue.length=0;renderPrintSheet();};
 renderPrintSheet();
  const coachMessages=[
- 'まずは右のキャンバスで翼に色をぬろう！左の3Dモデルに色がつくよ。',
- 'つぎは「側面（胴体）」！右のキャンバスで胴体をぬろう。',
- '翼や胴体に、好きな模様や文字を自由に描き足そう！',
- '完成まであと少し！きみだけの空飛ぶクルマに名前をつけよう！'
+ '① まずは右のキャンバスで翼に色をぬろう！左の機体にも色がつくよ。',
+ '② つぎは胴体に色をぬってみよう！右のキャンバスで描いてね。',
+ '③ 翼と胴体を切り替えて、好きな模様や文字を描き足そう！',
+ '④ 最後に、きみだけの空飛ぶクルマに名前をつけよう！'
  ];
  let currentStep=0;
- function setStep(n){currentStep=n;document.querySelectorAll('.step-btn').forEach(b=>b.classList.toggle('active',Number(b.dataset.step)===n));$('#coachMessage').textContent=coachMessages[n];$('#coachNext').textContent=n===3?'完成！':'つぎへ ▶';$('#namePanel').classList.toggle('open',n===3);if(n===0)switchPart('top');if(n===1)switchPart('side');}
- document.querySelectorAll('.step-btn').forEach(b=>b.addEventListener('click',()=>setStep(Number(b.dataset.step))));
+ function setStep(n){
+   currentStep=Math.max(0,Math.min(3,n));
+   $('#coachMessage').textContent=coachMessages[currentStep];
+   $('#coachBack').disabled=currentStep===0;
+   $('#coachNext').textContent=currentStep===3?'名前を決めよう':'つぎへ ▶';
+   $('#partTabs').hidden=currentStep!==2;
+   $('#namePanel').classList.toggle('open',currentStep===3);
+   if(currentStep===0)switchPart('top');
+   if(currentStep===1)switchPart('side');
+ }
+ $('#coachBack').addEventListener('click',()=>setStep(currentStep-1));
  $('#coachNext').addEventListener('click',()=>{if(currentStep<3)setStep(currentStep+1);else $('#aircraftName').focus();});
- $('#saveName').addEventListener('click',()=>{aircraftName=$('#aircraftName').value.trim();if(!aircraftName){alert('機体の名前を入力してね！');return;}$('#nameTag').textContent='✈ '+aircraftName;$('#nameTag').style.display='block';$('#coachMessage').textContent='「'+aircraftName+'」完成！スタッフに声をかけて印刷してもらおう！';});
+ function fullAircraftName(){const base=$('#aircraftName').value.trim().replace(/号+$/,'').trim();return base?base+'号':'';}
+ $('#saveName').addEventListener('click',()=>{
+   aircraftName=fullAircraftName();
+   if(!aircraftName){alert('機体の名前を入力してね！');return;}
+   $('#nameTag').textContent=aircraftName;
+   $('#nameTag').style.display='block';
+   $('#coachMessage').textContent='「'+aircraftName+'」完成！スタッフに声をかけて印刷してもらおう！';
+ });
  $('#aircraftName').addEventListener('keydown',e=>{if(e.key==='Enter')$('#saveName').click();});
+ setStep(0);
  const pointers=new Map();let pinch=null;viewer.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;viewer.setPointerCapture(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});pinch=null;});viewer.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;const prev=pointers.get(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===1){yaw-=(e.clientX-prev.x)*.006;pitch=Math.max(-1.35,Math.min(1.35,pitch+(e.clientY-prev.y)*.006));cameraUpdate();}else if(pointers.size===2){const p=[...pointers.values()],now=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);if(pinch)distance=Math.max(radius*.8,Math.min(radius*20,distance*pinch/now));pinch=now;cameraUpdate();}});function endPointer(e){pointers.delete(e.pointerId);pinch=null;}viewer.addEventListener('pointerup',endPointer);viewer.addEventListener('pointercancel',endPointer);viewer.addEventListener('wheel',e=>{e.preventDefault();distance=Math.max(radius*.8,Math.min(radius*20,distance*Math.exp(e.deltaY*.001)));cameraUpdate();},{passive:false});viewer.style.touchAction='none';window.addEventListener('resize',cameraUpdate);for(const part of ['top','side']){const layer=layers[part];layer.textureCtx.setTransform(1,0,0,1,0,0);layer.textureCtx.fillStyle='#ffffff';layer.textureCtx.fillRect(0,0,1024,1024);layer.texture.needsUpdate=true;}refresh();})();</script><script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(console.error));}</script></body></html>
