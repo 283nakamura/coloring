@@ -194,6 +194,11 @@ body>.coach .coach-nav button{font-size:clamp(15px,1.6vw,19px)!important;font-we
 /* v10: completion image priority, v8 coach typography */
 .completion-image-wrap img{max-height:65dvh}
 @media (orientation:landscape) and (min-width:700px){.completion-image-wrap img{max-height:58dvh}}
+/* v11: return to start after saving current design to print queue */
+.start-over{position:absolute;bottom:12px;left:14px;z-index:4;border:2px solid #f2b74d;border-radius:13px;background:#fff7db;color:#194d77;font-weight:900;font-size:clamp(14px,1.65vw,19px);padding:12px 18px;box-shadow:0 3px 14px #0003;touch-action:manipulation}
+.start-over:active{transform:translateY(1px)}
+@media(max-width:650px){.start-over{padding:9px 10px;font-size:13px;bottom:8px;left:8px}}
+@media print{.start-over{display:none!important}}
 </style></head><body><header>空飛ぶクルマをデザインしよう！</header>
 <main><section class="viewer" id="viewer"><a-scene embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" renderer="colorManagement: true; antialias: true" background="color: #eaf2fb"><a-entity id="aircraft" gltf-model="url(models/aircraft_coloring.glb)"></a-entity><a-entity id="cameraRig" position="0 0 8"><a-camera id="camera" look-controls="enabled: false" wasd-controls="enabled: false" fov="45"></a-camera></a-entity><a-entity light="type: ambient; intensity: 1.5"></a-entity><a-entity light="type: directional; intensity: 1.5" position="-3 7 5"></a-entity><a-entity light="type: directional; intensity: 0.7" position="5 3 -4"></a-entity></a-scene><div class="name-tag" id="nameTag"></div><div class="status" id="status">機体を読み込み中...</div><div class="view-actions"><button class="resetView" id="resetView">視点を戻す</button></div></section><section class="panel"><div class="tabs" id="partTabs" hidden><button class="active" data-part="top">翼に描く</button><button data-part="side">胴体に描く</button></div><div class="drawing" data-view="top"><canvas id="draw" width="1024" height="1024"></canvas>
 <div class="guide top" aria-hidden="true"><img src="images/aircraft_top_guide.png" alt="" style="display:block;width:100%;height:100%"></div>
@@ -204,6 +209,7 @@ body>.coach .coach-nav button{font-size:clamp(15px,1.6vw,19px)!important;font-we
   <div class="completion-image-wrap"><img id="completionImage" alt="完成した空飛ぶクルマの斜め上からの姿"></div>
   <div class="completion-coach"><img src="images/sora_coach.png" alt="ソラ教官"><div class="completion-message" id="completionMessage"></div></div>
  </div><div class="confetti-layer" id="confettiLayer" aria-hidden="true"></div>
+ <button type="button" id="startOver" class="start-over">↩ はじめにもどる</button>
  <div id="completionStaffSlot" class="completion-staff-slot"></div>
 </div><script>(()=>{'use strict';const $=s=>document.querySelector(s);const status=$('#status'),viewer=$('#viewer'),aircraft=$('#aircraft'),rig=$('#cameraRig'),draw=$('#draw'),ctx=draw.getContext('2d');const layers={};for(const part of ['top','side']){const canvas=document.createElement('canvas');canvas.width=canvas.height=1024;const c=canvas.getContext('2d');c.fillStyle='#ffffff';c.fillRect(0,0,1024,1024);const textureCanvas=document.createElement('canvas');textureCanvas.width=textureCanvas.height=1024;const textureCtx=textureCanvas.getContext('2d');const texture=new THREE.CanvasTexture(textureCanvas);texture.flipY=false;texture.colorSpace=THREE.SRGBColorSpace;texture.needsUpdate=true;layers[part]={canvas,ctx:c,textureCanvas,textureCtx,texture,history:[]};}
 const sideGuideImage=new Image();sideGuideImage.onload=()=>{if(active==='side')refresh();};sideGuideImage.src='images/aircraft_side_guide.png';const sideOverlayCanvas=document.createElement('canvas');sideOverlayCanvas.width=sideOverlayCanvas.height=1024;const sideOverlayCtx=sideOverlayCanvas.getContext('2d');const sideOutlineCanvas=document.createElement('canvas');sideOutlineCanvas.width=sideOutlineCanvas.height=1024;const sideOutlineCtx=sideOutlineCanvas.getContext('2d');function buildSideOutline(){sideOutlineCtx.clearRect(0,0,1024,1024);sideOutlineCtx.drawImage(sideGuideImage,0,0,1024,1024);const im=sideOutlineCtx.getImageData(0,0,1024,1024),d=im.data;for(let i=0;i<d.length;i+=4){const a=d[i+3];if(a===0)continue;const luminance=.2126*d[i]+.7152*d[i+1]+.0722*d[i+2];if(luminance>=175){d[i+3]=0;}else{d[i+3]=Math.round(a*Math.min(1,(190-luminance)/35));}}sideOutlineCtx.putImageData(im,0,0);}let active='top',mode='pen',drawing=false,last=null,model=null,center=new THREE.Vector3(),radius=1;let yaw=-0.491592653589793,pitch=.53,distance=8,initialDistance=8;function cameraUpdate(){if(!model)return;const camera=$('#camera').getObject3D('camera');if(!camera)return;rig.object3D.rotation.set(0,0,0);rig.object3D.position.set(center.x+distance*Math.cos(pitch)*Math.sin(yaw),center.y+distance*Math.sin(pitch),center.z+distance*Math.cos(pitch)*Math.cos(yaw));$('#camera').object3D.position.set(0,0,0);$('#camera').object3D.rotation.set(0,0,0);rig.object3D.updateMatrixWorld(true);camera.lookAt(center);camera.updateMatrixWorld(true);}function resetView(){yaw=-.491592653589793;pitch=.53;distance=initialDistance;cameraUpdate();}$('#resetView').onclick=resetView;function refresh(){ctx.clearRect(0,0,1024,1024);ctx.drawImage(layers[active].canvas,0,0);const layer=layers[active];const tc=layer.textureCtx;tc.setTransform(1,0,0,1,0,0);tc.clearRect(0,0,1024,1024);if(active==='top'){tc.setTransform(-1,0,0,1,1024,0);}tc.drawImage(layer.canvas,0,0);tc.setTransform(1,0,0,1,0,0);layer.texture.needsUpdate=true;}function save(){const l=layers[active];l.history.push(l.ctx.getImageData(0,0,1024,1024));if(l.history.length>12)l.history.shift();}function switchPart(part){active=part;document.querySelector('.drawing').dataset.view=part;document.querySelectorAll('[data-part]').forEach(b=>b.classList.toggle('active',b.dataset.part===part));refresh();}document.querySelectorAll('[data-part]').forEach(b=>b.onclick=()=>switchPart(b.dataset.part));function setMode(m){mode=m;$('#pen').classList.toggle('active',m==='pen');$('#eraser').classList.toggle('active',m==='eraser');}$('#pen').onclick=()=>setMode('pen');$('#eraser').onclick=()=>setMode('eraser');$('#undo').onclick=()=>{const l=layers[active];if(l.history.length){l.ctx.putImageData(l.history.pop(),0,0);refresh();}};$('#clear').onclick=()=>{save();const l=layers[active];l.ctx.fillStyle='white';l.ctx.fillRect(0,0,1024,1024);refresh();};const drawingEl=document.querySelector('.drawing');
@@ -245,7 +251,7 @@ function findPrintRotorParts(root){
 }
 const printPropellerImage=new Image();
 printPropellerImage.src=PRINT_PROPELLER.image;
-const printQueue=[];let aircraftName='';
+const printQueue=[];let aircraftName='';let currentDesignQueued=false;
 function captureTopForSticker(){
  if(!model)throw new Error('機体の読み込みが完了していません');
  const sceneEl=$('a-scene'),renderer=sceneEl.renderer;
@@ -431,13 +437,13 @@ function renderPrintSheet(){
  $('#staffLock').onclick=()=>{cancelStaffHold();staffOpened=false;staffControls.hidden=true;$('#staffLock').hidden=true;staffUnlock.hidden=false;staffUnlock.textContent='長押しで操作を表示（1秒）';staffUnlock.setAttribute('aria-expanded','false');};
 $('#addPrint').onclick=()=>{
  if(printQueue.length>=2){alert('2作品分が揃っています。印刷するか、印刷待ちを空にしてください。');return;}
- try{const shot=captureTopForSticker();if(shot.heightMM>45){if(!confirm('切り取り余白込みの高さが約'+shot.heightMM.toFixed(1)+'mmで、枠の高さ46mmに近いため印刷時に切れる可能性があります。追加しますか？'))return;}const scale=Math.min(1,44/shot.heightMM,72/shot.widthMM);printQueue.push({url:shot.url,widthMM:shot.widthMM*scale,heightMM:shot.heightMM*scale});renderPrintSheet();alert('印刷待ちに追加しました（'+printQueue.length+'/2作品）');}
+ try{const shot=captureTopForSticker();if(shot.heightMM>45){if(!confirm('切り取り余白込みの高さが約'+shot.heightMM.toFixed(1)+'mmで、枠の高さ46mmに近いため印刷時に切れる可能性があります。追加しますか？'))return;}const scale=Math.min(1,44/shot.heightMM,72/shot.widthMM);printQueue.push({url:shot.url,widthMM:shot.widthMM*scale,heightMM:shot.heightMM*scale});currentDesignQueued=true;renderPrintSheet();alert('印刷待ちに追加しました（'+printQueue.length+'/2作品）');}
  catch(err){console.error(err);alert('印刷用画像の作成に失敗しました：'+err.message);}
 };
 $('#showPrint').onclick=()=>{renderPrintSheet();$('#printOverlay').classList.add('open');};
 $('#closePrint').onclick=()=>$('#printOverlay').classList.remove('open');
 $('#doPrint').onclick=()=>{if(!printQueue.length){alert('まず「印刷待ちに追加」を押してください');return;}window.print();};
-$('#clearPrint').onclick=()=>{if(printQueue.length&&!confirm('印刷待ちの'+printQueue.length+'機を削除しますか？'))return;printQueue.length=0;renderPrintSheet();};
+$('#clearPrint').onclick=()=>{if(printQueue.length&&!confirm('印刷待ちの'+printQueue.length+'機を削除しますか？'))return;printQueue.length=0;currentDesignQueued=false;renderPrintSheet();};
 renderPrintSheet();
  const coachMessages=[
  '① まずは右のキャンバスで翼に色をぬろう！左の機体にも色がつくよ。',
@@ -503,6 +509,43 @@ renderPrintSheet();
      target.dispose();
    }
  }
+ // Return without reloading: preserve queued sticker images, reset both painting layers.
+ function returnToStart(){
+   if(!currentDesignQueued){
+     if(printQueue.length>=2){alert('印刷待ちが2作品でいっぱいです。印刷するか、印刷待ちを空にしてから戻ってください。');return;}
+     try{
+       const shot=captureTopForSticker();
+       const scale=Math.min(1,44/shot.heightMM,72/shot.widthMM);
+       printQueue.push({url:shot.url,widthMM:shot.widthMM*scale,heightMM:shot.heightMM*scale});
+       currentDesignQueued=true;
+       renderPrintSheet();
+     }catch(err){console.error(err);alert('印刷待ちへの保存に失敗しました。もう一度お試しください。');return;}
+   }
+   for(const part of ['top','side']){
+     const layer=layers[part];
+     layer.ctx.setTransform(1,0,0,1,0,0);
+     layer.ctx.fillStyle='#ffffff';
+     layer.ctx.fillRect(0,0,1024,1024);
+     layer.history.length=0;
+   }
+   zoom=1;panX=0;panY=0;touchPoints.clear();touchStart=null;updateZoom();
+   drawing=false;last=null;setMode('pen');
+   $('#aircraftName').value='';aircraftName='';
+   $('#nameTag').textContent='';$('#nameTag').style.display='none';
+   $('#completionImage').removeAttribute('src');
+   $('#completionScreen').hidden=true;
+   $('#confettiLayer').replaceChildren();
+   const staff=$('#staffZone');document.querySelector('.panel').appendChild(staff);staff.hidden=true;
+   cancelStaffHold();staffOpened=false;
+   $('#staffControls').hidden=true;$('#staffLock').hidden=true;$('#staffUnlock').hidden=false;
+   $('#staffUnlock').setAttribute('aria-expanded','false');
+   currentDesignQueued=false;
+   setStep(0);refresh();
+   // Update side material too, without changing the visible top drawing.
+   switchPart('side');switchPart('top');
+   resetView();
+ }
+ $('#startOver').addEventListener('click',returnToStart);
  function showCompletion(){
    const completion=$('#completionScreen');
    $('#completionMessage').textContent='「'+aircraftName+'」完成！おめでとう！';
