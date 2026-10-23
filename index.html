@@ -209,6 +209,9 @@ body>.coach{position:relative}
 /* v15: browser zoom prevention without visible guidance */
 html,body,body>header,main,.panel,.viewer,.coach,.tools,.tabs,button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .drawing,.drawing *,.viewer a-scene,.viewer canvas{touch-action:none!important}
+
+.ar-launch{border:0;border-radius:13px;background:#ff9e30;color:#442600;font-weight:900;font-size:clamp(16px,2vw,21px);padding:13px 24px;box-shadow:0 3px 12px #b36b3340;cursor:pointer}
+.ar-launch:disabled{opacity:.6}
 </style></head><body><header>空飛ぶクルマをデザインしよう！</header>
 <main><section class="viewer" id="viewer"><a-scene embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" renderer="colorManagement: true; antialias: true" background="color: #eaf2fb"><a-entity id="aircraft" gltf-model="url(models/aircraft_coloring.glb)"></a-entity><a-entity id="cameraRig" position="0 0 8"><a-camera id="camera" look-controls="enabled: false" wasd-controls="enabled: false" fov="45"></a-camera></a-entity><a-entity light="type: ambient; intensity: 1.5"></a-entity><a-entity light="type: directional; intensity: 1.5" position="-3 7 5"></a-entity><a-entity light="type: directional; intensity: 0.7" position="5 3 -4"></a-entity></a-scene><div class="name-tag" id="nameTag"></div><div class="status" id="status">機体を読み込み中...</div><div class="view-actions"><button class="resetView" id="resetView">視点を戻す</button></div></section><section class="panel"><div class="tabs" id="partTabs" hidden><button class="active" data-part="top">翼に描く</button><button data-part="side">胴体に描く</button></div><div class="drawing" data-view="top"><canvas id="draw" width="1024" height="1024"></canvas>
 <div class="guide top" aria-hidden="true"><img src="images/aircraft_top_guide.png" alt="" style="display:block;width:100%;height:100%"></div>
@@ -217,7 +220,7 @@ html,body,body>header,main,.panel,.viewer,.coach,.tools,.tabs,button{touch-actio
  <div class="completion-card">
   
   <div class="completion-image-wrap"><img id="completionImage" alt="完成した空飛ぶクルマの斜め上からの姿"></div>
-  <div class="completion-coach"><img src="images/sora_coach.png" alt="ソラ教官"><div class="completion-message" id="completionMessage"></div></div>
+  <button type="button" id="launchColoredAR" class="ar-launch">📱 ARで見てみよう！</button><div class="completion-coach"><img src="images/sora_coach.png" alt="ソラ教官"><div class="completion-message" id="completionMessage"></div></div>
  </div><div class="confetti-layer" id="confettiLayer" aria-hidden="true"></div>
  <div class="completion-handoff" role="status">🎉 できあがったら、スタッフの人に渡してね！</div>
  <div id="completionStaffSlot" class="completion-staff-slot"></div>
@@ -557,6 +560,35 @@ renderPrintSheet();
    resetView();
  }
  $('#startOver').addEventListener('click',returnToStart);
+
+ // AR用デザインデータを同一オリジンのIndexedDBへ保存（通信不要）。
+ function saveARDesign(data){
+   return new Promise((resolve,reject)=>{
+     const request=indexedDB.open('aircraft-ar-design',1);
+     request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains('designs'))db.createObjectStore('designs');};
+     request.onerror=()=>reject(request.error);
+     request.onsuccess=()=>{
+       const db=request.result,tx=db.transaction('designs','readwrite');
+       tx.objectStore('designs').put(data,'latest');
+       tx.oncomplete=()=>{db.close();resolve();};
+       tx.onerror=()=>{db.close();reject(tx.error);};
+     };
+   });
+ }
+ $('#launchColoredAR').addEventListener('click',async()=>{
+   const button=$('#launchColoredAR');button.disabled=true;button.textContent='ARを準備しています…';
+   try{
+     // 3D側と同じUV方向。翼のみ水平方向に反転している点に注意。
+     for(const part of ['top','side']){
+       const l=layers[part],tc=l.textureCtx;
+       tc.setTransform(1,0,0,1,0,0);tc.clearRect(0,0,1024,1024);
+       if(part==='top')tc.setTransform(-1,0,0,1,1024,0);
+       tc.drawImage(l.canvas,0,0);tc.setTransform(1,0,0,1,0,0);
+     }
+     await saveARDesign({top:layers.top.textureCanvas.toDataURL('image/png'),side:layers.side.textureCanvas.toDataURL('image/png'),name:aircraftName});
+     window.location.href='./ar-colored.html';
+   }catch(error){console.error(error);alert('ARデータの保存に失敗しました。空き容量をご確認ください。');button.disabled=false;button.textContent='📱 ARで見てみよう！';}
+ });
  function showCompletion(){
    const completion=$('#completionScreen');
    $('#completionMessage').textContent='「'+aircraftName+'」完成！おめでとう！';
