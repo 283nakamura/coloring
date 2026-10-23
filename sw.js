@@ -1,9 +1,10 @@
-const CACHE = 'aircraft-designer-v17';
+const CACHE = 'aircraft-designer-v18';
 const ASSETS = [
   './', './index.html', './manifest.json',
   './ar-colored.html',
   './vendor/aframe.min.js',
   './models/aircraft_coloring.glb',
+  './models/aircraft_ar_meters.glb',
   './images/aircraft_top_guide.png',
   './images/aircraft_side_guide.png',
   './images/propeller.png',
