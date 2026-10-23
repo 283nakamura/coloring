@@ -1,11 +1,12 @@
-const CACHE = 'aircraft-designer-v1';
+const CACHE = 'aircraft-designer-v2';
 const ASSETS = [
   './', './index.html', './manifest.json',
   './vendor/aframe.min.js',
   './models/aircraft_coloring.glb',
   './images/aircraft_top_guide.png',
   './images/aircraft_side_guide.png',
-  './images/propeller.png'
+  './images/propeller.png',
+  './images/sora_coach.png'
 ];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
