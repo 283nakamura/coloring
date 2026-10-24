@@ -1,17 +1,76 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>空飛ぶクルマ AR</title><script type="module" src="./vendor/model-viewer.min.js"></script><style>
-*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:#eaf2fb;color:#27445e}model-viewer{width:100%;height:100dvh;display:block}#hud{position:fixed;inset:auto 0 max(22px,env(safe-area-inset-bottom)) 0;display:flex;flex-direction:column;align-items:center;gap:12px;padding:12px;pointer-events:none}#hud>*{pointer-events:auto}#status{background:#ffffffed;border-radius:12px;padding:12px 18px;font-size:clamp(15px,2vw,20px);font-weight:750;line-height:1.5;text-align:center;max-width:min(92vw,780px)}button{border:0;border-radius:14px;padding:15px 25px;background:#ff9e30;color:#402400;font-size:20px;font-weight:900;box-shadow:0 3px 12px #0002}#next{background:#2579aa;color:#fff}#launch[hidden],#next[hidden]{display:none!important}
-</style></head><body><model-viewer id="mv" src="./models/aircraft_ar_meters.glb" scale="8.5 8.5 8.5" camera-orbit="35deg 88deg auto" camera-target="auto auto auto" field-of-view="35deg" camera-controls ar ar-modes="quick-look" ar-scale="fixed" ar-placement="floor" shadow-intensity="1"></model-viewer><div id="hud"><div id="status">ARを準備しています…</div><button id="launch" hidden>目の前に機体を出そう！</button><button id="next" hidden>次へ ▶</button></div><script>
-function readARDesign(){return new Promise((resolve,reject)=>{const r=indexedDB.open('aircraft-ar-design',1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('designs'))r.result.createObjectStore('designs')};r.onerror=()=>reject(r.error);r.onsuccess=()=>{const db=r.result,tx=db.transaction('designs','readonly'),get=tx.objectStore('designs').get('latest');get.onsuccess=()=>{resolve(get.result);db.close()};get.onerror=()=>{reject(get.error);db.close()}}})}
-const mv=document.querySelector('#mv'),status=document.querySelector('#status'),launch=document.querySelector('#launch'),next=document.querySelector('#next');let ready=false,arStarted=false,arAttempted=false;let arLeftPage=false;
-next.onclick=()=>location.href='./AirTaxi_Offline.html';
-function showNext(){if(!ready)return;next.hidden=false;launch.hidden=true;status.textContent='AR体験はどうだったかな？次はタブレットを持ったまま、ジオラマのところまで進んだら「次へ」を押そう！'}
-function tryAR(){if(!ready)return;arAttempted=true;try{const result=mv.activateAR();Promise.resolve(result).catch(e=>{console.warn('AR start:',e);launch.hidden=false;status.textContent='ボタンを押してARを始めよう！'})}catch(e){console.warn(e);launch.hidden=false;status.textContent='ボタンを押してARを始めよう！'}}
-launch.onclick=tryAR;
-mv.addEventListener('ar-status',e=>{if(e.detail.status==='session-started'){arStarted=true;arLeftPage=true;launch.hidden=true}if(e.detail.status==='not-presenting'&&arStarted)showNext()});
-// iOS Quick Look returns control to Safari/PWA after user closes the AR viewer.
-window.addEventListener('pageshow',()=>{if(arLeftPage&&ready)showNext()});window.addEventListener('focus',()=>{if(arLeftPage&&ready)showNext()});document.addEventListener('visibilitychange',()=>{if(document.hidden&&arAttempted)arLeftPage=true;else if(!document.hidden&&arLeftPage&&ready)showNext()});
-(async()=>{try{const design=await readARDesign();if(!design)throw Error('塗り絵データが見つかりません');await customElements.whenDefined('model-viewer');await mv.updateComplete;if(!mv.model)await new Promise((resolve,reject)=>{mv.addEventListener('load',resolve,{once:true});mv.addEventListener('error',reject,{once:true})});for(const [part,name] of [['top','M_Paint_Top'],['side','M_Paint_Side']]){const texture=await mv.createTexture(design[part]);const mats=mv.model.materials.filter(m=>m.name===name);if(!mats.length)throw Error('マテリアルがありません: '+name);for(const mat of mats){mat.pbrMetallicRoughness.setBaseColorFactor([1,1,1,1]);mat.pbrMetallicRoughness.baseColorTexture.setTexture(texture)}}ready=true;status.textContent='ARを起動しています…';// Browser may reject programmatic Quick Look due to required user gesture.
-tryAR();setTimeout(()=>{if(!arStarted&&!document.hidden){launch.hidden=false;status.textContent='ボタンを押してARを始めよう！'}},1400);
-}catch(e){console.error(e);status.textContent='ARの準備に失敗しました: '+(e.message||e);launch.hidden=true}})();
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><title>空飛ぶクルマ・カメラAR</title>
+<script src="./vendor/aframe.min.js"></script>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#18232d;font-family:system-ui,-apple-system,sans-serif;color:white;touch-action:manipulation}
+#cameraFeed{position:fixed;inset:0;width:100%;height:100%;object-fit:cover;background:#1a2732;z-index:0;transform:scaleX(1)}
+#arScene{position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
+#arScene canvas{background:transparent!important}
+#header{position:fixed;z-index:3;top:0;left:0;right:0;padding:calc(12px + env(safe-area-inset-top)) 12px 12px;text-align:center;font-size:clamp(17px,2.3vw,23px);font-weight:900;background:linear-gradient(#152739c9,#15273900);pointer-events:none;text-shadow:0 2px 6px #0009}
+#bottom{position:fixed;z-index:4;bottom:0;left:0;right:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:15px 12px calc(16px + env(safe-area-inset-bottom));background:linear-gradient(transparent,#101d2ae6);pointer-events:none}
+#bottom>*{pointer-events:auto}#status{max-width:750px;text-align:center;line-height:1.45;font-size:clamp(13px,1.7vw,17px);font-weight:700;text-shadow:0 1px 6px #000b}
+.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}button{border:0;border-radius:13px;padding:13px 22px;font-size:clamp(15px,1.9vw,19px);font-weight:900;box-shadow:0 3px 12px #0004;cursor:pointer}#next{background:#ffb347;color:#4c2c0c}#retry{background:#f0f6ff;color:#24567e}#retry[hidden]{display:none}
+#loading{position:fixed;z-index:2;top:48%;left:50%;transform:translate(-50%,-50%);background:#172d42d9;border-radius:12px;padding:13px 18px;font-weight:800;white-space:nowrap}#loading[hidden]{display:none}
+</style></head><body>
+<video id="cameraFeed" autoplay muted playsinline webkit-playsinline aria-label="背面カメラ映像"></video>
+<a-scene id="arScene" embedded vr-mode-ui="enabled:false" device-orientation-permission-ui="enabled:false" renderer="alpha: true; antialias: true; colorManagement: true; precision: mediump" loading-screen="enabled:false">
+<a-entity id="aircraft" gltf-model="url(./models/aircraft_coloring.glb)"></a-entity>
+<a-entity id="cameraRig"><a-camera id="viewCamera" look-controls="enabled:false" wasd-controls="enabled:false" fov="48" near="0.01" far="100000"></a-camera></a-entity>
+<a-entity light="type: ambient; intensity: 1.65"></a-entity>
+<a-entity light="type: directional; intensity: 1.8" position="-3 8 6"></a-entity>
+<a-entity light="type: directional; intensity: .8" position="5 3 -5"></a-entity>
+</a-scene>
+<div id="header">きみの空飛ぶクルマが目の前に！</div>
+<div id="loading">機体を準備しています…</div>
+<div id="bottom"><div id="status" role="status">カメラと機体を準備しています…</div><div class="actions"><button id="retry" hidden>カメラを起動する</button><button id="next">次へ ▶</button></div></div>
+<script>
+(()=>{'use strict';
+const $=s=>document.querySelector(s),video=$('#cameraFeed'),scene=$('#arScene'),aircraft=$('#aircraft'),status=$('#status'),loading=$('#loading'),retry=$('#retry'),next=$('#next');
+let stream=null,design=null,model=null,started=false;
+function readDesign(){return new Promise((resolve,reject)=>{const req=indexedDB.open('aircraft-ar-design',1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains('designs'))req.result.createObjectStore('designs')};req.onerror=()=>reject(req.error);req.onsuccess=()=>{const db=req.result,tx=db.transaction('designs','readonly'),r=tx.objectStore('designs').get('latest');r.onsuccess=()=>{resolve(r.result);db.close()};r.onerror=()=>{reject(r.error);db.close()}}})}
+function imageFromURL(url){return new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(new Error('デザイン画像を読み込めません'));img.src=url})}
+async function paintModel(){
+  if(!model||!design)return;
+  for(const [part,materialName] of [['top','M_Paint_Top'],['side','M_Paint_Side']]){
+    const img=await imageFromURL(design[part]);const texture=new THREE.Texture(img);texture.flipY=false;
+    if('colorSpace'in texture)texture.colorSpace=THREE.SRGBColorSpace;
+    else texture.encoding=THREE.sRGBEncoding;
+    texture.needsUpdate=true;let count=0;
+    model.traverse(obj=>{if(!obj.isMesh)return;const mats=Array.isArray(obj.material)?obj.material:[obj.material];const updated=mats.map(mat=>{if(!mat||mat.name!==materialName)return mat;const copy=mat.clone();copy.map=texture;copy.color.set('#ffffff');copy.needsUpdate=true;count++;return copy});obj.material=Array.isArray(obj.material)?updated:updated[0]});
+    if(!count)throw new Error(materialName+' が見つかりません');
+  }
+}
+function positionAircraft(){
+  // 元のGLBはX軸が前後方向、Z軸が翼幅方向。モデルの実寸単位に依存しない構図を作る。
+  model.updateMatrixWorld(true);const bounds=new THREE.Box3().setFromObject(model),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());
+  const span=Math.max(size.x,size.z,1);const cam=$('#viewCamera').getObject3D('camera');
+  const target=new THREE.Vector3(center.x,center.y+size.y*.16,center.z);
+  // 機首(-X)側、翼幅(+Z)側から、キャビン窓の高さ付近を見通す。
+  const offset=new THREE.Vector3(-.87,.17,1.08).normalize().multiplyScalar(span*1.18);
+  const position=target.clone().add(offset);const rig=$('#cameraRig').object3D;
+  rig.position.copy(position);cam.position.set(0,0,0);cam.lookAt(target);cam.updateMatrixWorld(true);
+  // A-Frameのcameraオブジェクトは親座標系に属するので、親の移動後のlookAtを維持する。
+  rig.updateMatrixWorld(true);cam.lookAt(target);cam.updateMatrixWorld(true);
+}
+async function startCamera(){
+  if(stream)return;retry.hidden=true;
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){status.textContent='この環境ではカメラを起動できません。HTTPSのSafariで開いてください。';retry.hidden=false;return}
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}}});video.srcObject=stream;await video.play();started=true;status.textContent='自分がデザインした機体を見てみよう！ 次へ進むとジオラマに移動するよ。';}
+  catch(e){console.warn('camera:',e);status.textContent='カメラを使うにはアクセスを許可してください。許可できない場合も「次へ」で進めます。';retry.hidden=false}
+}
+function stopCamera(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}video.pause();video.srcObject=null}
+next.addEventListener('click',()=>{stopCamera();window.location.href='./AirTaxi_Offline.html'});
+retry.addEventListener('click',startCamera);
+window.addEventListener('pagehide',stopCamera);
+// Safariが戻る操作でページを復元した場合、明示的なタップでカメラを再開できるようにする。
+window.addEventListener('pageshow',e=>{if(e.persisted&&!stream)retry.hidden=false});
+(async()=>{try{
+  design=await readDesign();if(!design)throw new Error('塗り絵のデザインがありません。最初の塗り絵画面から始めてください。');
+  if(!scene.hasLoaded)await new Promise(resolve=>scene.addEventListener('loaded',resolve,{once:true}));
+  if(!aircraft.getObject3D('mesh'))await new Promise((resolve,reject)=>{aircraft.addEventListener('model-loaded',resolve,{once:true});aircraft.addEventListener('model-error',()=>reject(new Error('3D機体を読み込めません')),{once:true})});
+  model=aircraft.getObject3D('mesh');await paintModel();positionAircraft();loading.hidden=true;
+  status.textContent='カメラの起動を待っています…';await startCamera();
+}catch(e){console.error(e);loading.hidden=true;status.textContent='準備に失敗しました：'+(e.message||e);retry.hidden=false}})();
 if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(console.error));
+})();
 </script></body></html>
