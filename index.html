@@ -220,7 +220,7 @@ html,body,body>header,main,.panel,.viewer,.coach,.tools,.tabs,button{touch-actio
  <div class="completion-card">
   
   <div class="completion-image-wrap"><img id="completionImage" alt="完成した空飛ぶクルマの斜め上からの姿"></div>
-  <button type="button" id="launchColoredAR" class="ar-launch">ARで出してみよう！</button><div class="completion-coach"><img src="images/sora_coach.png" alt="ソラ教官"><div class="completion-message" id="completionMessage"></div></div>
+  <button type="button" id="launchColoredAR" class="ar-launch">目の前に機体を出そう！</button><div class="completion-coach"><img src="images/sora_coach.png" alt="ソラ教官"><div class="completion-message" id="completionMessage"></div></div>
  </div><div class="confetti-layer" id="confettiLayer" aria-hidden="true"></div>
  
  
@@ -587,7 +587,7 @@ renderPrintSheet();
      }
      await saveARDesign({top:layers.top.textureCanvas.toDataURL('image/png'),side:layers.side.textureCanvas.toDataURL('image/png'),name:aircraftName});
      window.location.href='./ar-colored.html';
-   }catch(error){console.error(error);alert('ARデータの保存に失敗しました。空き容量をご確認ください。');button.disabled=false;button.textContent='ARで出してみよう！';}
+   }catch(error){console.error(error);alert('ARデータの保存に失敗しました。空き容量をご確認ください。');button.disabled=false;button.textContent='目の前に機体を出そう！';}
  });
  function showCompletion(){
    const completion=$('#completionScreen');
