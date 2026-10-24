@@ -220,10 +220,10 @@ html,body,body>header,main,.panel,.viewer,.coach,.tools,.tabs,button{touch-actio
  <div class="completion-card">
   
   <div class="completion-image-wrap"><img id="completionImage" alt="完成した空飛ぶクルマの斜め上からの姿"></div>
-  <button type="button" id="launchColoredAR" class="ar-launch">📱 ARで見てみよう！</button><div class="completion-coach"><img src="images/sora_coach.png" alt="ソラ教官"><div class="completion-message" id="completionMessage"></div></div>
+  <button type="button" id="launchColoredAR" class="ar-launch">ARで出してみよう！</button><div class="completion-coach"><img src="images/sora_coach.png" alt="ソラ教官"><div class="completion-message" id="completionMessage"></div></div>
  </div><div class="confetti-layer" id="confettiLayer" aria-hidden="true"></div>
- <div class="completion-handoff" role="status">🎉 できあがったら、スタッフの人に渡してね！</div>
- <div id="completionStaffSlot" class="completion-staff-slot"></div>
+ 
+ 
 </div><script>(()=>{'use strict';const $=s=>document.querySelector(s);const status=$('#status'),viewer=$('#viewer'),aircraft=$('#aircraft'),rig=$('#cameraRig'),draw=$('#draw'),ctx=draw.getContext('2d');const layers={};for(const part of ['top','side']){const canvas=document.createElement('canvas');canvas.width=canvas.height=1024;const c=canvas.getContext('2d');c.fillStyle='#ffffff';c.fillRect(0,0,1024,1024);const textureCanvas=document.createElement('canvas');textureCanvas.width=textureCanvas.height=1024;const textureCtx=textureCanvas.getContext('2d');const texture=new THREE.CanvasTexture(textureCanvas);texture.flipY=false;texture.colorSpace=THREE.SRGBColorSpace;texture.needsUpdate=true;layers[part]={canvas,ctx:c,textureCanvas,textureCtx,texture,history:[]};}
 const sideGuideImage=new Image();sideGuideImage.onload=()=>{if(active==='side')refresh();};sideGuideImage.src='images/aircraft_side_guide.png';const sideOverlayCanvas=document.createElement('canvas');sideOverlayCanvas.width=sideOverlayCanvas.height=1024;const sideOverlayCtx=sideOverlayCanvas.getContext('2d');const sideOutlineCanvas=document.createElement('canvas');sideOutlineCanvas.width=sideOutlineCanvas.height=1024;const sideOutlineCtx=sideOutlineCanvas.getContext('2d');function buildSideOutline(){sideOutlineCtx.clearRect(0,0,1024,1024);sideOutlineCtx.drawImage(sideGuideImage,0,0,1024,1024);const im=sideOutlineCtx.getImageData(0,0,1024,1024),d=im.data;for(let i=0;i<d.length;i+=4){const a=d[i+3];if(a===0)continue;const luminance=.2126*d[i]+.7152*d[i+1]+.0722*d[i+2];if(luminance>=175){d[i+3]=0;}else{d[i+3]=Math.round(a*Math.min(1,(190-luminance)/35));}}sideOutlineCtx.putImageData(im,0,0);}let active='top',mode='pen',drawing=false,last=null,model=null,center=new THREE.Vector3(),radius=1;let yaw=-0.491592653589793,pitch=.53,distance=8,initialDistance=8;function cameraUpdate(){if(!model)return;const camera=$('#camera').getObject3D('camera');if(!camera)return;rig.object3D.rotation.set(0,0,0);rig.object3D.position.set(center.x+distance*Math.cos(pitch)*Math.sin(yaw),center.y+distance*Math.sin(pitch),center.z+distance*Math.cos(pitch)*Math.cos(yaw));$('#camera').object3D.position.set(0,0,0);$('#camera').object3D.rotation.set(0,0,0);rig.object3D.updateMatrixWorld(true);camera.lookAt(center);camera.updateMatrixWorld(true);}function resetView(){yaw=-.491592653589793;pitch=.53;distance=initialDistance;cameraUpdate();}$('#resetView').onclick=resetView;function refresh(){ctx.clearRect(0,0,1024,1024);ctx.drawImage(layers[active].canvas,0,0);const layer=layers[active];const tc=layer.textureCtx;tc.setTransform(1,0,0,1,0,0);tc.clearRect(0,0,1024,1024);if(active==='top'){tc.setTransform(-1,0,0,1,1024,0);}tc.drawImage(layer.canvas,0,0);tc.setTransform(1,0,0,1,0,0);layer.texture.needsUpdate=true;}function save(){const l=layers[active];l.history.push(l.ctx.getImageData(0,0,1024,1024));if(l.history.length>12)l.history.shift();}function switchPart(part){active=part;document.querySelector('.drawing').dataset.view=part;document.querySelectorAll('[data-part]').forEach(b=>b.classList.toggle('active',b.dataset.part===part));refresh();}document.querySelectorAll('[data-part]').forEach(b=>b.onclick=()=>switchPart(b.dataset.part));function setMode(m){mode=m;$('#pen').classList.toggle('active',m==='pen');$('#eraser').classList.toggle('active',m==='eraser');}$('#pen').onclick=()=>setMode('pen');$('#eraser').onclick=()=>setMode('eraser');$('#undo').onclick=()=>{const l=layers[active];if(l.history.length){l.ctx.putImageData(l.history.pop(),0,0);refresh();}};$('#clear').onclick=()=>{if(!confirm('全部を消して良いですか？'))return;save();const l=layers[active];l.ctx.fillStyle='white';l.ctx.fillRect(0,0,1024,1024);refresh();};const drawingEl=document.querySelector('.drawing');
 let zoom=1,panX=0,panY=0;const touchPoints=new Map();let touchStart=null;
@@ -587,15 +587,14 @@ renderPrintSheet();
      }
      await saveARDesign({top:layers.top.textureCanvas.toDataURL('image/png'),side:layers.side.textureCanvas.toDataURL('image/png'),name:aircraftName});
      window.location.href='./ar-colored.html';
-   }catch(error){console.error(error);alert('ARデータの保存に失敗しました。空き容量をご確認ください。');button.disabled=false;button.textContent='📱 ARで見てみよう！';}
+   }catch(error){console.error(error);alert('ARデータの保存に失敗しました。空き容量をご確認ください。');button.disabled=false;button.textContent='ARで出してみよう！';}
  });
  function showCompletion(){
    const completion=$('#completionScreen');
    $('#completionMessage').textContent='「'+aircraftName+'」完成！おめでとう！';
    try{const url=snapshotFinishedAircraft();if(url)$('#completionImage').src=url;}
    catch(err){console.warn('完成画像を取得できませんでした',err);}
-   const slot=$('#completionStaffSlot'),staff=$('#staffZone');
-   slot.appendChild(staff);staff.hidden=false;
+   const staff=$('#staffZone');staff.hidden=true;
    // 完成するまでは運営操作を見せず、完成後も長押しでのみ解錠。
    $('#staffControls').hidden=true;$('#staffLock').hidden=true;$('#staffUnlock').hidden=false;
    const confetti=$('#confettiLayer');confetti.replaceChildren();
