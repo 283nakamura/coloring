@@ -212,6 +212,14 @@ html,body,body>header,main,.panel,.viewer,.coach,.tools,.tabs,button{touch-actio
 
 .ar-launch{border:0;border-radius:13px;background:#ff9e30;color:#442600;font-weight:900;font-size:clamp(16px,2vw,21px);padding:13px 24px;box-shadow:0 3px 12px #b36b3340;cursor:pointer}
 .ar-launch:disabled{opacity:.6}
+
+/* Step 4: spotlight the naming form; keep it fully interactive. */
+body.naming-step .panel{position:relative;isolation:isolate}
+body.naming-step .panel::after{content:"";position:absolute;inset:0;background:rgba(13,30,51,.72);z-index:10;pointer-events:none}
+body.naming-step #namePanel{position:relative;z-index:11;box-shadow:0 0 0 5px #ffd36e,0 0 32px #ffdf85;padding:14px;background:#fff8dc}
+body.naming-step .drawing::after{display:none!important}
+body.naming-step .tools,body.naming-step .tabs{pointer-events:none}
+.completion-card{gap:8px}.completion-coach{order:2}.completion-card .ar-launch{order:3}.completion-image-wrap{order:1}
 </style></head><body><header>空飛ぶクルマをデザインしよう！</header>
 <main><section class="viewer" id="viewer"><a-scene embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" renderer="colorManagement: true; antialias: true" background="color: #eaf2fb"><a-entity id="aircraft" gltf-model="url(models/aircraft_coloring.glb)"></a-entity><a-entity id="cameraRig" position="0 0 8"><a-camera id="camera" look-controls="enabled: false" wasd-controls="enabled: false" fov="45"></a-camera></a-entity><a-entity light="type: ambient; intensity: 1.5"></a-entity><a-entity light="type: directional; intensity: 1.5" position="-3 7 5"></a-entity><a-entity light="type: directional; intensity: 0.7" position="5 3 -4"></a-entity></a-scene><div class="name-tag" id="nameTag"></div><div class="status" id="status">機体を読み込み中...</div><div class="view-actions"><button class="resetView" id="resetView">視点を戻す</button></div></section><section class="panel"><div class="tabs" id="partTabs" hidden><button class="active" data-part="top">翼に描く</button><button data-part="side">胴体に描く</button></div><div class="drawing" data-view="top"><canvas id="draw" width="1024" height="1024"></canvas>
 <div class="guide top" aria-hidden="true"><img src="images/aircraft_top_guide.png" alt="" style="display:block;width:100%;height:100%"></div>
@@ -220,7 +228,7 @@ html,body,body>header,main,.panel,.viewer,.coach,.tools,.tabs,button{touch-actio
  <div class="completion-card">
   
   <div class="completion-image-wrap"><img id="completionImage" alt="完成した空飛ぶクルマの斜め上からの姿"></div>
-  <button type="button" id="launchColoredAR" class="ar-launch">目の前に機体を出そう！</button><div class="completion-coach"><img src="images/sora_coach.png" alt="ソラ教官"><div class="completion-message" id="completionMessage"></div></div>
+  <div class="completion-coach"><img src="images/sora_coach.png" alt="ソラ教官"><div class="completion-message" id="completionMessage"></div></div><button type="button" id="launchColoredAR" class="ar-launch">目の前に機体を出そう！</button>
  </div><div class="confetti-layer" id="confettiLayer" aria-hidden="true"></div>
  
  
@@ -473,6 +481,7 @@ renderPrintSheet();
    $('#partTabs').hidden=currentStep!==2;
    document.querySelector('.drawing').classList.toggle('pattern-step',currentStep===2);
    $('#namePanel').classList.toggle('open',currentStep===3);
+   document.body.classList.toggle('naming-step',currentStep===3);
    if(currentStep===0)switchPart('top');
    if(currentStep===1)switchPart('side');
  }
