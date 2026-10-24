@@ -1,26 +1,5 @@
-const CACHE = 'aircraft-designer-v19';
-const ASSETS = [
-  './', './index.html', './manifest.json',
-  './ar-colored.html',
-  './vendor/aframe.min.js',
-  './models/aircraft_coloring.glb',
-  './models/aircraft_ar_meters.glb',
-  './images/aircraft_top_guide.png',
-  './images/aircraft_side_guide.png',
-  './images/propeller.png',
-  './images/sora_coach.png'
-  
-  // AR用
-  './ar-test.html',
-  './vendor/model-viewer.min.js'
-];
-self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
-});
-self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
-});
-self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
-  event.respondWith(caches.match(event.request).then(hit => hit || fetch(event.request)));
-});
+const CACHE='aircraft-flight-integrated-v1';
+const ASSETS=["./", "./index.html", "./ar-colored.html", "./flight-captain.html", "./AirTaxi_Offline.html", "./manifest.json", "./images/flight_01.webp", "./images/flight_01.avif", "./images/flight_02.webp", "./audio/flight_01.mp3", "./images/flight_01.png", "./images/flight_02.png", "./images/flight_01.jpg", "./videos/flight_01.mp4", "./videos/flight_02.mp4", "./videos/flight_03.mp4", "./models/beta_alia_vtol_aircraft.glb", "./models/Ehang216_for_AFrame_Optimization.glb", "./models/aircraft_coloring.glb", "./models/aircraft_ar_meters.glb"];
+self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(async cache=>{for(const url of ASSETS){try{await cache.add(url)}catch(err){console.warn('Offline cache skipped:',url,err)}}}).then(()=>self.skipWaiting()))});
+self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
+self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(resp=>{if(resp.ok){const copy=resp.clone();caches.open(CACHE).then(c=>c.put(e.request,copy)).catch(()=>{})}return resp})))})
