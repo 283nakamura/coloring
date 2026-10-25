@@ -1,5 +1,5 @@
 // Dream On offline cache. Version change forces fresh asset installation.
-const CACHE = 'dreamon-aircraft-v3';
+const CACHE = 'dreamon-aircraft-v4';
 const CORE = [
   './', './index.html', './manifest.json', './vendor/aframe.min.js',
   './models/aircraft_coloring.glb',

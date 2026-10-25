@@ -625,7 +625,7 @@ renderPrintSheet();
  // 印刷先は運営スタッフが一度設定し、このiPadに保存します。
  const PRINT_SERVER_KEY='dreamon-print-server-url';
  function printApiUrl(){const base=(localStorage.getItem(PRINT_SERVER_KEY)||'').trim().replace(/\/$/,'');return (base||'')+'/api/jobs';}
- function configurePrintServer(){const current=localStorage.getItem(PRINT_SERVER_KEY)||'';const input=prompt('MacのHTTPS印刷サーバーURLを入力してください（例：https://192.168.1.10:8766）',current);if(input===null)return;const url=input.trim().replace(/\/$/,'');if(url && !/^https:\/\/i.test(url)){alert('https:// から始まるURLを入力してください');return;}localStorage.setItem(PRINT_SERVER_KEY,url);alert(url?'印刷先を保存しました。MacのIPが変わった場合は再設定してください。':'印刷先設定を解除しました。');}
+ function configurePrintServer(){const current=localStorage.getItem(PRINT_SERVER_KEY)||'';const input=prompt('MacのHTTPS印刷サーバーURLを入力してください（例：https://192.168.1.10:8766）',current);if(input===null)return;const url=input.trim().replace(/\/$/,'');if(url && !/^https:\/\//i.test(url)){alert('https:// から始まるURLを入力してください');return;}localStorage.setItem(PRINT_SERVER_KEY,url);alert(url?'印刷先を保存しました。MacのIPが変わった場合は再設定してください。':'印刷先設定を解除しました。');}
  const printSettingButton=document.createElement('button');printSettingButton.type='button';printSettingButton.textContent='Mac印刷先を設定';printSettingButton.onclick=configurePrintServer;
  document.querySelector('#staffControls')?.appendChild(printSettingButton);
  const PRINT_DB='dreamon-pc-print-v1';
