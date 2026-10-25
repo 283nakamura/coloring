@@ -1,1 +1,10 @@
-{"name": "空飛ぶクルマ体験", "short_name": "空飛ぶクルマ", "start_url": "./index.html", "display": "standalone", "background_color": "#e6f4ff", "theme_color": "#e6f4ff"}
+{
+  "name": "空飛ぶクルマ・デザイン体験",
+  "short_name": "空飛ぶクルマ",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eaf2fb",
+  "theme_color": "#e6f4ff",
+  "lang": "ja"
+}

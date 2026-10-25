@@ -1,5 +1,42 @@
-const CACHE='aircraft-original-ar-no-guide-v2';
-const ASSETS=["./", "./index.html", "./ar-colored.html",  "./flight-captain.html", "./AirTaxi_Offline.html", "./manifest.json", "./vendor/aframe.min.js", "./vendor/model-viewer.min.js", "./images/sora_coach.png", "./images/aircraft_top_guide.png", "./images/aircraft_side_guide.png", "./images/propeller.png", "./images/flight_01.webp", "./images/flight_01.avif", "./images/flight_02.webp", "./audio/flight_01.mp3", "./images/flight_01.png", "./images/flight_02.png", "./images/flight_01.jpg", "./videos/flight_01.mp4", "./videos/flight_02.mp4", "./videos/flight_03.mp4", "./models/beta_alia_vtol_aircraft.glb", "./models/Ehang216_for_AFrame_Optimization.glb", "./models/aircraft_coloring.glb", "./models/aircraft_ar_meters.glb", "./models/aircraft_ar_10m.glb", "./models/aircraft_ar_front_180_3x.glb"];
-self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(async cache=>{for(const url of ASSETS){try{await cache.add(url)}catch(err){console.warn('Offline cache skipped:',url,err)}}}).then(()=>self.skipWaiting()))});
-self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
-self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(resp=>{if(resp.ok){const copy=resp.clone();caches.open(CACHE).then(c=>c.put(e.request,copy)).catch(()=>{})}return resp})))})
+// Dream On offline cache. Version change forces fresh asset installation.
+const CACHE = 'dreamon-aircraft-v2';
+const CORE = [
+  './', './index.html', './manifest.json', './vendor/aframe.min.js',
+  './models/aircraft_coloring.glb',
+  './images/aircraft_top_guide.png', './images/aircraft_side_guide.png',
+  './images/sora_coach.png', './images/propeller.png',
+  './ar-colored.html', './flight-captain.html'
+];
+self.addEventListener('install', event => event.waitUntil((async () => {
+  const cache = await caches.open(CACHE);
+  // Missing optional files do not block basic coloring installation.
+  await Promise.all(CORE.map(async path => {
+    try { const response = await fetch(path, {cache:'reload'});
+      if (response.ok) await cache.put(path, response);
+    } catch (err) { console.warn('Cache skipped:', path, err); }
+  }));
+  await self.skipWaiting();
+})()));
+self.addEventListener('activate', event => event.waitUntil((async () => {
+  for (const name of await caches.keys()) if (name.startsWith('dreamon-aircraft-') && name !== CACHE) await caches.delete(name);
+  await self.clients.claim();
+})()));
+self.addEventListener('fetch', event => {
+  const request = event.request;
+  if (request.method !== 'GET') return;
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin || url.pathname.includes('/api/') || url.pathname.endsWith('/admin')) return;
+  event.respondWith((async () => {
+    const cache = await caches.open(CACHE);
+    const cached = await cache.match(request);
+    if (cached) return cached;
+    try {
+      const response = await fetch(request);
+      if (response.ok) await cache.put(request, response.clone());
+      return response;
+    } catch (err) {
+      if (request.mode === 'navigate') return await cache.match('./index.html') || Response.error();
+      throw err;
+    }
+  })());
+});
