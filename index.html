@@ -223,7 +223,7 @@ body.naming-step .tools,body.naming-step .tabs{pointer-events:none}
 </style></head><body><header>空飛ぶクルマをデザインしよう！</header>
 <main><section class="viewer" id="viewer"><a-scene embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" renderer="colorManagement: true; antialias: true" background="color: #eaf2fb"><a-entity id="aircraft" gltf-model="url(models/aircraft_coloring.glb)"></a-entity><a-entity id="cameraRig" position="0 0 8"><a-camera id="camera" look-controls="enabled: false" wasd-controls="enabled: false" fov="45"></a-camera></a-entity><a-entity light="type: ambient; intensity: 1.5"></a-entity><a-entity light="type: directional; intensity: 1.5" position="-3 7 5"></a-entity><a-entity light="type: directional; intensity: 0.7" position="5 3 -4"></a-entity></a-scene><div class="name-tag" id="nameTag"></div><div class="status" id="status">機体を読み込み中...</div><div class="view-actions"><button class="resetView" id="resetView">視点を戻す</button></div></section><section class="panel"><div class="tabs" id="partTabs" hidden><button class="active" data-part="top">翼に描く</button><button data-part="side">胴体に描く</button></div><div class="drawing" data-view="top"><canvas id="draw" width="1024" height="1024"></canvas>
 <div class="guide top" aria-hidden="true"><img src="images/aircraft_top_guide.png" alt="" style="display:block;width:100%;height:100%"></div>
-<div class="guide side" aria-hidden="true"><img src="images/aircraft_side_guide.png" alt="" style="display:block;width:100%;height:100%"></div></div><div class="tools"><label>色 <input type="color" id="color" value="#ed5247"></label><label>太さ <input type="range" id="size" min="3" max="90" value="22"></label><button id="pen" class="active">ペン</button><button id="eraser">消しゴム</button><button id="undo">元に戻す</button><button id="clear">全消去</button></div><div class="name-panel" id="namePanel"><label for="aircraftName"><b>きみの機体の名前は？</b></label><div class="name-input-row"><input id="aircraftName" maxlength="10" placeholder="例：スカイフェニックス" autocomplete="off"><span class="name-suffix">号</span><button type="button" id="saveName">決定！</button></div></div><div class="staff-zone" id="staffZone" hidden><div class="staff-bar"><span class="staff-label">運営スタッフ専用</span><button type="button" id="staffLock" hidden>操作を隠す</button><button type="button" id="staffUnlock" aria-expanded="false">長押しで操作を表示（1秒）</button></div><div class="print-tools" id="staffControls" hidden><button class="primary" id="addPrint">印刷待ちに追加</button><button id="showPrint">4×6シールを印刷</button><button id="clearPrint">印刷待ちを空にする</button><button type="button" id="startOver" class="start-over">↩ はじめにもどる</button><span class="print-count" id="printCount">0 / 2 作品（各2枚）</span></div></div></section></main><div class="coach"><img src="images/sora_coach.png" alt="ソラ教官"><div class="coach-message" id="coachMessage" aria-live="polite">まずは右のキャンバスで翼に色をぬろう！</div><div class="coach-nav"><button class="coach-back" id="coachBack" disabled>◀ もどる</button><button class="coach-next" id="coachNext">つぎへ ▶</button></div></div>
+<div class="guide side" aria-hidden="true"><img src="images/aircraft_side_guide.png" alt="" style="display:block;width:100%;height:100%"></div></div><div class="tools"><label>色 <input type="color" id="color" value="#ed5247"></label><label>太さ <input type="range" id="size" min="3" max="90" value="22"></label><button id="pen" class="active">ペン</button><button id="eraser">消しゴム</button><button id="undo">元に戻す</button><button id="clear">全消去</button></div><div class="name-panel" id="namePanel"><label for="aircraftName"><b>きみの機体の名前は？</b></label><div class="name-input-row"><input id="aircraftName" maxlength="10" placeholder="例：スカイフェニックス" autocomplete="off"><span class="name-suffix">号</span><button type="button" id="saveName">決定！</button></div></div><div class="staff-zone" id="staffZone" hidden><div class="staff-bar"><span class="staff-label">運営スタッフ専用</span><button type="button" id="staffLock" hidden>操作を隠す</button><button type="button" id="staffUnlock" aria-expanded="false">長押しで操作を表示（1秒）</button></div><div class="print-tools" id="staffControls" hidden><button class="primary" id="addPrint">印刷待ちに追加</button><button id="showPrint">4×6シールを印刷</button><button id="clearPrint">印刷待ちを空にする</button><button type="button" id="startOver" class="start-over">↩ はじめにもどる</button><span class="print-count" id="printCount">0 / 2 作品（各2枚）</span><div id="pcPrintDiagnostics" style="flex-basis:100%;font-size:13px;line-height:1.6;padding:10px;background:#fff;border:1px solid #b8d6e8;border-radius:9px;overflow-wrap:anywhere"><b>Mac送信診断</b><div id="pcDiagCount">送信待ち件数：確認中</div><div id="pcDiagLast">最後の送信結果：未確認</div><div id="pcDiagError">最後のエラー：なし</div><button type="button" id="pcDiagRetry" style="padding:8px 12px;margin-top:5px;border-radius:8px;border:1px solid #91b7d3;background:#e8f5ff">送信待ちを再送信</button><button type="button" id="pcDiagRefresh" style="padding:8px 12px;margin-top:5px;border-radius:8px;border:1px solid #91b7d3;background:#fff">状態を更新</button></div></div></div></section></main><div class="coach"><img src="images/sora_coach.png" alt="ソラ教官"><div class="coach-message" id="coachMessage" aria-live="polite">まずは右のキャンバスで翼に色をぬろう！</div><div class="coach-nav"><button class="coach-back" id="coachBack" disabled>◀ もどる</button><button class="coach-next" id="coachNext">つぎへ ▶</button></div></div>
 <div class="print-overlay" id="printOverlay" role="dialog" aria-label="A6印刷プレビュー"><div class="print-dialog"><div class="print-actions"><strong>4×6インチ横・2作品×2枚の印刷プレビュー</strong><button class="primary" id="doPrint">印刷する</button><button id="closePrint">閉じる</button></div><div class="sheet-viewport"><div class="print-sheet" id="printSheet"><div class="print-cell"></div><div class="print-cell"></div><div class="print-cell"></div><div class="print-cell"></div></div></div></div></div><div id="completionScreen" class="completion-screen" role="dialog" aria-modal="true" aria-label="空飛ぶクルマ完成" hidden>
  <div class="completion-card">
   
@@ -626,11 +626,46 @@ renderPrintSheet();
  function printStore(mode,fn){return new Promise((resolve,reject)=>{const req=indexedDB.open(PRINT_DB,1);req.onupgradeneeded=()=>req.result.createObjectStore('jobs',{keyPath:'id'});req.onerror=()=>reject(req.error);req.onsuccess=()=>{const db=req.result,tx=db.transaction('jobs',mode);let result;try{result=fn(tx.objectStore('jobs'));}catch(e){db.close();reject(e);return;}tx.oncomplete=()=>{db.close();resolve(result?.result);};tx.onerror=()=>{db.close();reject(tx.error);};};});}
  function pendingPrintJobs(){return new Promise((resolve,reject)=>{const req=indexedDB.open(PRINT_DB,1);req.onupgradeneeded=()=>req.result.createObjectStore('jobs',{keyPath:'id'});req.onerror=()=>reject(req.error);req.onsuccess=()=>{const db=req.result,tx=db.transaction('jobs','readonly'),q=tx.objectStore('jobs').getAll();q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);tx.oncomplete=()=>db.close();};});}
  let printSending=false;
- async function flushPcPrint(){if(printSending)return;printSending=true;const st=$('#pcPrintStatus');try{const jobs=await pendingPrintJobs();for(const job of jobs){if(st)st.textContent='印刷画像をPCに送信中…';const ctrl=new AbortController(),timeout=setTimeout(()=>ctrl.abort(),10000);try{const res=await fetch('https://192.168.1.16:8766/api/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(job),signal:ctrl.signal});if(!res.ok)throw Error('HTTP '+res.status);await printStore('readwrite',store=>store.delete(job.id));}finally{clearTimeout(timeout);}}if(st)st.textContent='印刷画像をPCに送信しました';$('#retryPcPrint').style.display='none';}catch(err){console.warn('PC印刷送信保留',err);if(st)st.textContent='PCへの送信待ちです。Wi-Fi接続を確認してください。';$('#retryPcPrint').style.display='block';}finally{printSending=false;}}
- async function queuePcPrint(){const st=$('#pcPrintStatus');try{if(st)st.textContent='印刷画像を準備しています…';const shot=captureTopForSticker();const id=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'_'+Math.random().toString(36).slice(2));await printStore('readwrite',store=>store.put({id,name:aircraftName||'なまえなし号',image:shot.url}));await flushPcPrint();}catch(err){console.error('印刷画像準備失敗',err);if(st)st.textContent='印刷画像を作成できませんでした。スタッフにお知らせください。';$('#retryPcPrint').style.display='block';}}
+ let pcDiagLast='未確認',pcDiagError='なし';
+ async function refreshPcDiagnostics(){
+   const count=$('#pcDiagCount'),last=$('#pcDiagLast'),error=$('#pcDiagError');
+   try{const jobs=await pendingPrintJobs();count.textContent='送信待ち件数：'+jobs.length+'件'+(jobs.length?'（'+jobs.map(j=>j.name).join('、')+'）':'');}
+   catch(e){count.textContent='送信待ち件数：取得失敗（'+String(e.message||e)+'）';}
+   last.textContent='最後の送信結果：'+pcDiagLast;
+   error.textContent='最後のエラー：'+pcDiagError;
+ }
+ $('#pcDiagRetry').onclick=async()=>{pcDiagLast='手動再送信中';await refreshPcDiagnostics();await flushPcPrint();await refreshPcDiagnostics();};
+ $('#pcDiagRefresh').onclick=refreshPcDiagnostics;
+
+ async function flushPcPrint(){
+   if(printSending){pcDiagLast='別の送信処理が進行中';await refreshPcDiagnostics();return;}
+   printSending=true;const st=$('#pcPrintStatus');
+   try{
+     const jobs=await pendingPrintJobs();
+     if(!jobs.length){pcDiagLast='送信待ちなし';pcDiagError='なし';return;}
+     pcDiagLast=jobs.length+'件の送信開始';await refreshPcDiagnostics();
+     for(const job of jobs){
+       if(st)st.textContent='印刷画像をPCに送信中…';
+       const ctrl=new AbortController(),timeout=setTimeout(()=>ctrl.abort(),10000);
+       try{
+         const res=await fetch('https://192.168.1.16:8766/api/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(job),signal:ctrl.signal});
+         if(!res.ok)throw Error('HTTP '+res.status);
+         await printStore('readwrite',store=>store.delete(job.id));
+         pcDiagLast='送信成功：'+job.name;pcDiagError='なし';
+       }finally{clearTimeout(timeout);}
+     }
+     if(st)st.textContent='印刷画像をPCに送信しました';$('#retryPcPrint').style.display='none';
+   }catch(err){
+     console.warn('PC印刷送信保留',err);
+     pcDiagLast='送信失敗';pcDiagError=(err.name||'Error')+'：'+(err.message||String(err));
+     if(st)st.textContent='PCへの送信待ちです。Wi-Fi接続を確認してください。';
+     $('#retryPcPrint').style.display='block';
+   }finally{printSending=false;await refreshPcDiagnostics();}
+ }
+ async function queuePcPrint(){const st=$('#pcPrintStatus');try{if(st)st.textContent='印刷画像を準備しています…';const shot=captureTopForSticker();const id=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'_'+Math.random().toString(36).slice(2));await printStore('readwrite',store=>store.put({id,name:aircraftName||'なまえなし号',image:shot.url}));await flushPcPrint();}catch(err){console.error('印刷画像準備失敗',err);pcDiagLast='画像生成または保存に失敗';pcDiagError=(err.name||'Error')+'：'+(err.message||String(err));if(st)st.textContent='印刷画像を作成できませんでした。スタッフにお知らせください。';$('#retryPcPrint').style.display='block';await refreshPcDiagnostics();}}
  $('#retryPcPrint').onclick=async()=>{const jobs=await pendingPrintJobs().catch(()=>[]);if(jobs.length)await flushPcPrint();else await queuePcPrint();};
  window.addEventListener('online',flushPcPrint);document.addEventListener('visibilitychange',()=>{if(!document.hidden)flushPcPrint();});
- setTimeout(flushPcPrint,2500);
+ setTimeout(flushPcPrint,2500);setTimeout(refreshPcDiagnostics,3000);
  function showCompletion(){
    const completion=$('#completionScreen');
    $('#completionMessage').textContent='「'+aircraftName+'」完成！おめでとう！';
