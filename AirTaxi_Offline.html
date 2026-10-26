@@ -1450,7 +1450,7 @@ AFRAME.registerComponent("spin-rotors", {
           >
             <a-gltf-model
               id="external-aircraft-alia"
-              src="models/aircraft_coloring.glb"
+              src="models/aircraft_ar_meters.glb"
 
               scale="6 6 6"
               rotation="0 60 0"
@@ -4814,10 +4814,10 @@ const obj=el?.getObject3D('mesh');
 let bounds='未取得',world='未取得',meshes=0;
 if(obj){obj.updateWorldMatrix(true,true);const b=new THREE.Box3().setFromObject(obj);const size=b.getSize(new THREE.Vector3());const center=b.getCenter(new THREE.Vector3());bounds=`size=${v(size)} / center=${v(center)}`;obj.traverse(x=>{if(x.isMesh)meshes++});world=v(obj.getWorldPosition(new THREE.Vector3()))}
 const src=el?.getAttribute('src')||'';
-out.textContent=`読込イベント: ${lastEvent}\nGLB: ${src}\nURL: ${src?new URL(src,location.href).href:'なし'}\nmesh: ${obj?'あり':'なし'} / mesh数: ${meshes}\n境界箱(ワールド): ${bounds}\nモデル世界座標: ${world}\nモデルscale: ${el?.getAttribute('scale')}\nモデルrotation: ${el?.getAttribute('rotation')}\n移動親position: ${car?.getAttribute('position')?.x}, ${car?.getAttribute('position')?.y}, ${car?.getAttribute('position')?.z}\n外部scene visible: ${scene?.getAttribute('visible')}\n機体wrapper visible: ${wrap?.getAttribute('visible')}\nテスト表示: ${test?'ON':'OFF'}`;
+out.textContent=`読込イベント: ${lastEvent}\nGLB: ${src}\nURL: ${src?new URL(src,location.href).href:'なし'}\nmesh: ${obj?'あり':'なし'} / mesh数: ${meshes}\ngltf-model属性: ${JSON.stringify(el?.getAttribute('gltf-model'))}\nモデルobject3D: ${Object.keys(el?.object3DMap||{}).join(',')}\n境界箱(ワールド): ${bounds}\nモデル世界座標: ${world}\nモデルscale: ${el?.getAttribute('scale')}\nモデルrotation: ${el?.getAttribute('rotation')}\n移動親position: ${car?.getAttribute('position')?.x}, ${car?.getAttribute('position')?.y}, ${car?.getAttribute('position')?.z}\n外部scene visible: ${scene?.getAttribute('visible')}\n機体wrapper visible: ${wrap?.getAttribute('visible')}\nテスト表示: ${test?'ON':'OFF'}`;
 }catch(e){out.textContent='診断エラー: '+e.message}
 }
-el?.addEventListener('model-loaded',()=>{lastEvent='model-loaded (成功)';report()});
+el?.addEventListener('model-loaded',()=>{lastEvent='model-loaded (成功)';setTimeout(report,150);report()});
 el?.addEventListener('model-error',e=>{lastEvent='model-error (失敗): '+JSON.stringify(e.detail||{}).slice(0,400);report()});
 function save(){if(saved)return;saved={parent:el.parentElement,position:el.getAttribute('position'),rotation:el.getAttribute('rotation'),scale:el.getAttribute('scale'),carVisible:car.getAttribute('visible'),wrapVisible:wrap.getAttribute('visible'),sceneVisible:scene.getAttribute('visible')}}
 document.getElementById('takeoff-model-diag-front').addEventListener('click',()=>{
