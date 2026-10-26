@@ -4790,5 +4790,50 @@ button.addEventListener('click',async()=>{
 ready();
 })();
 </script>
+
+<!-- Takeoff model diagnostic (temporary): does not alter flight video logic. -->
+<style>
+#takeoff-model-diag{position:fixed;right:8px;bottom:8px;z-index:99998;width:min(355px,94vw);max-height:43vh;overflow:auto;background:rgba(5,20,35,.89);color:#fff;border:1px solid #70c6ff;border-radius:10px;padding:10px;font:12px/1.45 system-ui,sans-serif;box-sizing:border-box}
+#takeoff-model-diag pre{white-space:pre-wrap;word-break:break-word;margin:6px 0;font:11px/1.45 ui-monospace,monospace}
+#takeoff-model-diag button{padding:7px 9px;margin:3px;border:0;border-radius:6px;background:#f4c15a;color:#172534;font-weight:bold;font-size:12px}
+</style>
+<div id="takeoff-model-diag"><b>離陸用3Dモデル診断</b><pre id="takeoff-model-diag-info">確認中…</pre><button id="takeoff-model-diag-front">機体を正面にテスト表示</button><button id="takeoff-model-diag-reset">元の配置に戻す</button><button id="takeoff-model-diag-refresh">状態を更新</button></div>
+<script>
+(function(){
+const el=document.getElementById('external-aircraft-alia');
+const car=document.getElementById('moving-car');
+const wrap=document.getElementById('external-aircraft-alia-wrapper');
+const scene=document.getElementById('external-scene');
+const cam=document.getElementById('main-camera');
+const out=document.getElementById('takeoff-model-diag-info');
+let lastEvent='待機中', test=false, saved=null;
+const v=x=>x?`${x.x.toFixed(2)}, ${x.y.toFixed(2)}, ${x.z.toFixed(2)}`:'—';
+function report(){
+try{
+const obj=el?.getObject3D('mesh');
+let bounds='未取得',world='未取得',meshes=0;
+if(obj){obj.updateWorldMatrix(true,true);const b=new THREE.Box3().setFromObject(obj);const size=b.getSize(new THREE.Vector3());const center=b.getCenter(new THREE.Vector3());bounds=`size=${v(size)} / center=${v(center)}`;obj.traverse(x=>{if(x.isMesh)meshes++});world=v(obj.getWorldPosition(new THREE.Vector3()))}
+const src=el?.getAttribute('src')||'';
+out.textContent=`読込イベント: ${lastEvent}\nGLB: ${src}\nURL: ${src?new URL(src,location.href).href:'なし'}\nmesh: ${obj?'あり':'なし'} / mesh数: ${meshes}\n境界箱(ワールド): ${bounds}\nモデル世界座標: ${world}\nモデルscale: ${el?.getAttribute('scale')}\nモデルrotation: ${el?.getAttribute('rotation')}\n移動親position: ${car?.getAttribute('position')?.x}, ${car?.getAttribute('position')?.y}, ${car?.getAttribute('position')?.z}\n外部scene visible: ${scene?.getAttribute('visible')}\n機体wrapper visible: ${wrap?.getAttribute('visible')}\nテスト表示: ${test?'ON':'OFF'}`;
+}catch(e){out.textContent='診断エラー: '+e.message}
+}
+el?.addEventListener('model-loaded',()=>{lastEvent='model-loaded (成功)';report()});
+el?.addEventListener('model-error',e=>{lastEvent='model-error (失敗): '+JSON.stringify(e.detail||{}).slice(0,400);report()});
+function save(){if(saved)return;saved={parent:el.parentElement,position:el.getAttribute('position'),rotation:el.getAttribute('rotation'),scale:el.getAttribute('scale'),carVisible:car.getAttribute('visible'),wrapVisible:wrap.getAttribute('visible'),sceneVisible:scene.getAttribute('visible')}}
+document.getElementById('takeoff-model-diag-front').addEventListener('click',()=>{
+if(!el||!cam)return;save();test=true;
+// Attach to camera for a temporary clear visibility test. Restore parent/transform on reset.
+cam.appendChild(el);el.setAttribute('position','0 -0.2 -3');el.setAttribute('rotation','0 0 0');
+el.setAttribute('scale','1 1 1');el.setAttribute('visible','true');
+report();
+});
+document.getElementById('takeoff-model-diag-reset').addEventListener('click',()=>{
+if(saved){saved.parent.appendChild(el);el.setAttribute('position',saved.position||'0 0 0');el.setAttribute('rotation',saved.rotation);el.setAttribute('scale',saved.scale);el.setAttribute('visible','true');saved=null}test=false;report();
+});
+document.getElementById('takeoff-model-diag-refresh').addEventListener('click',report);
+setInterval(report,1500);report();
+})();
+</script>
+
 </body>
 </html>
