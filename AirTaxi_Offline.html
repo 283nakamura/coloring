@@ -1537,7 +1537,7 @@ AFRAME.registerComponent("spin-rotors", {
 
           <a-entity
             id="cockpit-aircraft-alia"
-            gltf-model="url(models/aircraft_coloring.glb)"
+            gltf-model="url(models/beta_alia_vtol_aircraft.glb)"
             position="0.4 -0.3 -1.4"
             rotation="0 0 0"
             scale="1 1 1"
@@ -4774,7 +4774,7 @@ async function paintModel(el){
 async function ready(){try{
  design=await readDesign();if(!design||!design.top||!design.side)throw Error('塗り絵データがありません。先に塗り絵を完成させてください。');
  window.__personalizedFlight=true;
- const ids=['external-aircraft-alia','cockpit-aircraft-alia'];
+ const ids=['external-aircraft-alia'];
  for(const id of ids){const el=document.getElementById(id);if(!el)continue;
  el.addEventListener('model-loaded',()=>paintModel(el).catch(console.error));if(el.getObject3D('mesh'))await paintModel(el);
  }
