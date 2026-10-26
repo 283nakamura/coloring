@@ -4771,7 +4771,7 @@ async function ready(){try{
  for(const id of ids){const el=document.getElementById(id);if(!el)continue;
  el.addEventListener('model-loaded',()=>paintModel(el).catch(console.error));if(el.getObject3D('mesh'))await paintModel(el);
  }
- status.textContent=(design.name?'「'+design.name+'」で ':'')+'フライトの準備ができました！';button.disabled=false;
+ status.textContent='準備ができました。フライトを始めよう！';button.disabled=false;
 }catch(e){status.textContent='準備できませんでした：'+e.message;console.error(e)}}
 button.addEventListener('click',async()=>{
  button.disabled=true;

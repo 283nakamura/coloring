@@ -253,7 +253,6 @@ body.naming-step .tools,body.naming-step .tabs{pointer-events:none}
 #completionSpinArea{position:relative;touch-action:none!important;user-select:none;-webkit-user-select:none;cursor:grab;min-height:160px}
 #completionSpinArea:active{cursor:grabbing}
 #completionSpinArea img{pointer-events:none;-webkit-user-drag:none}
-.spin-hint{position:absolute;left:50%;bottom:7px;transform:translateX(-50%);background:#194d77dc;color:#fff;border-radius:18px;padding:6px 15px;font-size:clamp(12px,1.5vw,16px);font-weight:800;white-space:nowrap;pointer-events:none}
 .completion-next-guide{order:3;font-size:clamp(15px,1.9vw,21px);font-weight:900;color:#194d77;text-align:center;padding:5px 12px;line-height:1.45}
 .completion-card .ar-launch{order:4;min-width:190px}
 @media(orientation:landscape){.completion-next-guide{font-size:clamp(14px,1.7vw,19px)}.completion-card{gap:5px}}
@@ -264,7 +263,7 @@ body.naming-step .tools,body.naming-step .tabs{pointer-events:none}
 <div class="print-overlay" id="printOverlay" role="dialog" aria-label="A6印刷プレビュー"><div class="print-dialog"><div class="print-actions"><strong>A6横・2作品×2枚の予備印刷プレビュー</strong><button class="primary" id="doPrint">印刷する</button><button id="closePrint">閉じる</button></div><div class="sheet-viewport"><div class="print-sheet" id="printSheet"><div class="print-cell"></div><div class="print-cell"></div><div class="print-cell"></div><div class="print-cell"></div></div></div></div></div><div id="completionScreen" class="completion-screen" role="dialog" aria-modal="true" aria-label="空飛ぶクルマ完成" hidden>
  <div class="completion-card">
   
-  <div class="completion-image-wrap" id="completionSpinArea"><img id="completionImage" draggable="false" alt="完成した空飛ぶクルマ。指で左右にスワイプすると回転します"><div class="spin-hint">指でスワイプして機体を回そう！</div></div>
+  <div class="completion-image-wrap" id="completionSpinArea"><img id="completionImage" draggable="false" alt="完成した空飛ぶクルマ。指で左右にスワイプすると回転します"></div>
   <div class="completion-coach"><img src="images/sora_coach.png" alt="ソラ教官"><div class="completion-message" id="completionMessage"></div></div><div id="pcPrintStatus" hidden aria-live="polite"></div><button type="button" id="retryPcPrint" style="display:none;margin:5px auto;padding:9px;border-radius:8px;border:1px solid #7ba9c7;background:white">印刷画像を再送信</button><div class="completion-next-guide">タブレットを持ったままジオラマのところに移動したら「次へ」を押そう！</div><button type="button" id="launchColoredAR" class="ar-launch">次へ ▶</button>
    </div><div class="completion-staff-slot" id="completionStaffSlot"></div><div class="confetti-layer" id="confettiLayer" aria-hidden="true"></div>
  
@@ -617,6 +616,7 @@ renderPrintSheet();
    $('#nameTag').textContent='';$('#nameTag').style.display='none';
    $('#completionImage').removeAttribute('src');
    $('#completionScreen').hidden=true;
+   if(spinLoop){cancelAnimationFrame(spinLoop);spinLoop=0;}
    $('#confettiLayer').replaceChildren();
    const staff=$('#staffZone');document.querySelector('.panel').appendChild(staff);staff.hidden=true;
    cancelStaffHold();staffOpened=false;
@@ -740,11 +740,22 @@ renderPrintSheet();
      confetti.appendChild(piece);
    }
    completion.hidden=false;
+   spinLastTick=0;
+   if(!spinLoop)spinLoop=requestAnimationFrame(tickCompletionSpin);
    queuePcPrint();
  }
  // 完成画面：塗り絵プレビューと同じカメラを指で回し、画像を再描画する。
  const spinArea=$('#completionSpinArea');
- let spinPointer=null,spinFrame=0,spinLastDraw=0;
+ let spinPointer=null,spinFrame=0,spinLastDraw=0,spinLoop=0,spinLastTick=0;
+ // 完成画面のみ自動回転。ドラッグ中は自動回転を一時停止する。
+ function tickCompletionSpin(now){
+   spinLoop=0;
+   if($('#completionScreen').hidden){spinLastTick=0;return;}
+   const dt=spinLastTick?Math.min((now-spinLastTick)/1000,0.08):0;
+   spinLastTick=now;
+   if(!spinPointer && dt){yaw-=0.34*dt;cameraUpdate();scheduleSpin();}
+   spinLoop=requestAnimationFrame(tickCompletionSpin);
+ }
  function redrawCompletionSpin(){
    spinFrame=0;
    if($('#completionScreen').hidden)return;
@@ -752,7 +763,7 @@ renderPrintSheet();
    catch(e){console.warn('完成プレビュー更新失敗',e);}
    spinLastDraw=performance.now();
  }
- function scheduleSpin(){if(spinFrame)return;if(performance.now()-spinLastDraw<75){spinFrame=requestAnimationFrame(redrawCompletionSpin);return;}spinFrame=requestAnimationFrame(redrawCompletionSpin);}
+ function scheduleSpin(){if(spinFrame)return;if(performance.now()-spinLastDraw<180){spinFrame=requestAnimationFrame(redrawCompletionSpin);return;}spinFrame=requestAnimationFrame(redrawCompletionSpin);}
  spinArea.addEventListener('pointerdown',e=>{e.preventDefault();spinPointer={id:e.pointerId,x:e.clientX,y:e.clientY};spinArea.setPointerCapture(e.pointerId);});
  spinArea.addEventListener('pointermove',e=>{if(!spinPointer||spinPointer.id!==e.pointerId)return;e.preventDefault();yaw-=(e.clientX-spinPointer.x)*.006;pitch=Math.max(-1.35,Math.min(1.35,pitch+(e.clientY-spinPointer.y)*.006));spinPointer.x=e.clientX;spinPointer.y=e.clientY;cameraUpdate();scheduleSpin();});
  for(const type of ['pointerup','pointercancel','lostpointercapture'])spinArea.addEventListener(type,e=>{if(spinPointer&&spinPointer.id===e.pointerId)spinPointer=null;});
