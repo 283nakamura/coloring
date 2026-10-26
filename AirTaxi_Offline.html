@@ -4313,7 +4313,9 @@ AFRAME.registerComponent("spin-rotors", {
          * 準備完了前に押された場合はhandleChoice()側で、
          * 選択された動画だけを優先して準備します。
          */
-        prepareBranchVideos();
+        // iPad Safariで複数の360度動画を同時にデコード準備すると、
+        // 分岐先のVideoTextureが黒くなる場合があるため事前準備しない。
+        // 選択後に必要な1本だけをロードする。
       }
 
 
@@ -4557,27 +4559,12 @@ AFRAME.registerComponent("spin-rotors", {
          * 端末が遅いなどの理由で未準備だった場合だけ、
          * 選択された1本を優先して準備します。
          */
-        if (
-          !preparedBranchVideos.has(
-            selectedVideo
-          )
-        ) {
-          await prepareBranchVideo(
-            selectedVideo
-          );
-        }
+        // 分岐先の動画だけを読み込む。非選択側のデコードは行わない。
+        selectedVideo.preload = 'auto';
+        selectedVideo.load();
 
-        prepareVideo(
-          selectedVideo
-        );
-
-        /*
-         * 先頭フレームが使える状態になるまで、
-         * 黒フェードを維持します。
-         */
-        await waitForVideoFirstFrame(
-          selectedVideo
-        );
+        // A-Frame側の球面を表示してから再生し、動画テクスチャを更新する。
+        // 動画の再生成功後に描画を待つ（黒画面のまま進むのを防ぐ）。
 
         showVideoSphere(
           selectedSphere
@@ -4589,6 +4576,7 @@ AFRAME.registerComponent("spin-rotors", {
         await playVideoOnce(
           selectedVideo
         );
+        await waitForVideoFirstFrame(selectedVideo);
 
         /*
          * A-Frameの球面へ動画テクスチャが反映されるまで
@@ -4782,10 +4770,10 @@ AFRAME.registerComponent("spin-rotors", {
 
         btnArea.innerHTML = `
           <button
-            class="action-btn"
+            class="action-btn mission-return-btn"
             onclick="window.location.href='./index.html'"
           >
-            はじめの塗り絵にもどる
+            はじめの塗り絵に<br>もどる
           </button>
         `;
       }
@@ -4795,6 +4783,9 @@ AFRAME.registerComponent("spin-rotors", {
 
 
 <style>
+/* 完了ボタンはソラ教官の吹き出しから離した右上に配置 */
+#btn-area:has(.mission-return-btn){top:max(20px,env(safe-area-inset-top));bottom:auto;left:auto;right:max(20px,env(safe-area-inset-right));width:auto;}
+.mission-return-btn{max-width:230px;min-width:170px;line-height:1.3;text-align:center;white-space:normal;}
 #aircraft-selector,#aircraft-selection-panel,#aircraft-selection-overlay{display:none!important}
 #personal-flight-gate{position:fixed;inset:0;z-index:99999;background:linear-gradient(135deg,#eaf7ff,#fff4d7);display:flex;align-items:center;justify-content:center;padding:20px;font-family:system-ui,sans-serif;color:#194b70}
 #personal-flight-gate>div{max-width:600px;background:white;border-radius:22px;padding:30px;text-align:center;box-shadow:0 12px 40px #1b4c6b33}
