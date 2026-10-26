@@ -248,15 +248,24 @@ body.naming-step .tools,body.naming-step .tabs{pointer-events:none}
 #pcDiagRefresh{flex-shrink:0;margin:0!important;padding:6px 9px!important;font-size:12px!important}
 #pcPrintDiagnostics button{font-size:12px!important;padding:7px 9px!important}
 @media(max-width:480px){#pcPrintDiagnostics{grid-template-columns:1fr 1fr}#pcDiagRetry,#pcDiagConnection{font-size:11px!important}#staffControls #startOver{min-width:150px}}
+
+/* 完成画面：回転プレビュー、ジオラマ案内 */
+#completionSpinArea{position:relative;touch-action:none!important;user-select:none;-webkit-user-select:none;cursor:grab;min-height:160px}
+#completionSpinArea:active{cursor:grabbing}
+#completionSpinArea img{pointer-events:none;-webkit-user-drag:none}
+.spin-hint{position:absolute;left:50%;bottom:7px;transform:translateX(-50%);background:#194d77dc;color:#fff;border-radius:18px;padding:6px 15px;font-size:clamp(12px,1.5vw,16px);font-weight:800;white-space:nowrap;pointer-events:none}
+.completion-next-guide{order:3;font-size:clamp(15px,1.9vw,21px);font-weight:900;color:#194d77;text-align:center;padding:5px 12px;line-height:1.45}
+.completion-card .ar-launch{order:4;min-width:190px}
+@media(orientation:landscape){.completion-next-guide{font-size:clamp(14px,1.7vw,19px)}.completion-card{gap:5px}}
 </style></head><body><header>空飛ぶクルマをデザインしよう！</header>
 <main><section class="viewer" id="viewer"><a-scene embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" renderer="colorManagement: true; antialias: true" background="color: #eaf2fb"><a-entity id="aircraft" gltf-model="url(models/aircraft_coloring.glb)"></a-entity><a-entity id="cameraRig" position="0 0 8"><a-camera id="camera" look-controls="enabled: false" wasd-controls="enabled: false" fov="45"></a-camera></a-entity><a-entity light="type: ambient; intensity: 1.5"></a-entity><a-entity light="type: directional; intensity: 1.5" position="-3 7 5"></a-entity><a-entity light="type: directional; intensity: 0.7" position="5 3 -4"></a-entity></a-scene><div class="name-tag" id="nameTag"></div><div class="status" id="status">機体を読み込み中...</div><div class="view-actions"><button class="resetView" id="resetView">視点を戻す</button></div></section><section class="panel"><div class="tabs" id="partTabs" hidden><button class="active" data-part="top">翼に描く</button><button data-part="side">胴体に描く</button></div><div class="drawing" data-view="top"><canvas id="draw" width="1024" height="1024"></canvas>
 <div class="guide top" aria-hidden="true"><img src="images/aircraft_top_guide.png" alt="" style="display:block;width:100%;height:100%"></div>
-<div class="guide side" aria-hidden="true"><img src="images/aircraft_side_guide.png" alt="" style="display:block;width:100%;height:100%"></div></div><div class="tools"><label>色 <input type="color" id="color" value="#ed5247"></label><label>太さ <input type="range" id="size" min="3" max="90" value="22"></label><button id="pen" class="active">ペン</button><button id="eraser">消しゴム</button><button id="undo">元に戻す</button><button id="clear">全消去</button></div><div class="name-panel" id="namePanel"><label for="aircraftName"><b>きみの機体の名前は？</b></label><div class="name-input-row"><input id="aircraftName" maxlength="10" placeholder="例：スカイフェニックス" autocomplete="off"><span class="name-suffix">号</span><button type="button" id="saveName">決定！</button></div></div><div class="staff-zone" id="staffZone" hidden><div class="staff-bar"><span class="staff-label">運営スタッフ専用</span><button type="button" id="staffLock" hidden>操作を隠す</button><button type="button" id="staffUnlock" aria-expanded="false">長押しで操作を表示（1秒）</button></div><div class="print-tools" id="staffControls" hidden><button type="button" id="startOver" class="start-over">↩ はじめにもどる</button><details class="staff-emergency" id="emergencyPrint"><summary>トラブル対応：PCに送られない場合にiPadから印刷</summary><div class="staff-emergency-body"><strong>Macへ送信できない場合のみ使用</strong><div>通常時は使用しないでください。Macでの重複印刷にご注意ください。</div><div class="staff-emergency-buttons"><button class="primary" id="addPrint">現在の作品を予備保存</button><button id="showPrint">iPadからA6シール印刷</button><button id="clearPrint">予備印刷データを空にする</button></div><span class="print-count" id="printCount">0 / 2 作品（各2枚）</span><div class="staff-emergency-hint">直近2作品をiPad内に一時保存します。アプリを終了・再読み込みすると消えるため、トラブル時はアプリを閉じないでください。</div></div></details><div id="pcPrintDiagnostics" style="flex-basis:100%;font-size:13px;line-height:1.6;padding:10px;background:#fff;border:1px solid #b8d6e8;border-radius:9px;overflow-wrap:anywhere"><b>Mac送信診断</b><div id="pcDiagCount">送信待ち件数：確認中</div><div id="pcDiagLast">最後の送信結果：未確認</div><div id="pcDiagError">最後のエラー：なし</div><button type="button" id="pcDiagRetry" style="padding:8px 12px;margin-top:5px;border-radius:8px;border:1px solid #91b7d3;background:#e8f5ff">送信待ちを再送信</button><button type="button" id="pcDiagConnection" style="padding:8px 12px;margin-top:5px;border-radius:8px;border:1px solid #91b7d3;background:#fff">Mac接続テスト</button><div class="pc-diag-compact"><div id="pcDiagConnectionResult">Mac接続：未確認</div><button type="button" id="pcDiagRefresh" style="padding:8px 12px;margin-top:5px;border-radius:8px;border:1px solid #91b7d3;background:#fff">状態を更新</button></div></div></div></div></section></main><div class="coach"><img src="images/sora_coach.png" alt="ソラ教官"><div class="coach-message" id="coachMessage" aria-live="polite">まずは右のキャンバスで翼に色をぬろう！</div><div class="coach-nav"><button class="coach-back" id="coachBack" disabled>◀ もどる</button><button class="coach-next" id="coachNext">つぎへ ▶</button></div></div>
+<div class="guide side" aria-hidden="true"><img src="images/aircraft_side_guide.png" alt="" style="display:block;width:100%;height:100%"></div></div><div class="tools"><label>色 <input type="color" id="color" value="#ed5247"></label><label>太さ <input type="range" id="size" min="3" max="90" value="22"></label><button id="pen" class="active">ペン</button><button id="eraser">消しゴム</button><button id="undo">元に戻す</button><button id="clear">全消去</button></div><div class="name-panel" id="namePanel"><label for="aircraftName"><b>きみの機体の名前は？</b></label><div class="name-input-row"><input id="aircraftName" maxlength="10" placeholder="例：スカイフェニックス" autocomplete="off"><span class="name-suffix">号</span><button type="button" id="saveName">決定！</button></div></div><div class="staff-zone" id="staffZone" hidden><div class="staff-bar"><span class="staff-label">運営スタッフ専用</span><button type="button" id="staffLock" hidden>操作を隠す</button><button type="button" id="staffUnlock" aria-expanded="false">長押しで操作を表示（1秒）</button></div><div class="print-tools" id="staffControls" hidden><button type="button" id="startOver" class="start-over">↩ はじめにもどる</button><button type="button" id="staffLaunchAR" class="start-over" style="position:static">特例：ARを表示</button><details class="staff-emergency" id="emergencyPrint"><summary>トラブル対応：PCに送られない場合にiPadから印刷</summary><div class="staff-emergency-body"><strong>Macへ送信できない場合のみ使用</strong><div>通常時は使用しないでください。Macでの重複印刷にご注意ください。</div><div class="staff-emergency-buttons"><button class="primary" id="addPrint">現在の作品を予備保存</button><button id="showPrint">iPadからA6シール印刷</button><button id="clearPrint">予備印刷データを空にする</button></div><span class="print-count" id="printCount">0 / 2 作品（各2枚）</span><div class="staff-emergency-hint">直近2作品をiPad内に一時保存します。アプリを終了・再読み込みすると消えるため、トラブル時はアプリを閉じないでください。</div></div></details><div id="pcPrintDiagnostics" style="flex-basis:100%;font-size:13px;line-height:1.6;padding:10px;background:#fff;border:1px solid #b8d6e8;border-radius:9px;overflow-wrap:anywhere"><b>Mac送信診断</b><div id="pcDiagCount">送信待ち件数：確認中</div><div id="pcDiagLast">最後の送信結果：未確認</div><div id="pcDiagError">最後のエラー：なし</div><button type="button" id="pcDiagRetry" style="padding:8px 12px;margin-top:5px;border-radius:8px;border:1px solid #91b7d3;background:#e8f5ff">送信待ちを再送信</button><button type="button" id="pcDiagConnection" style="padding:8px 12px;margin-top:5px;border-radius:8px;border:1px solid #91b7d3;background:#fff">Mac接続テスト</button><div class="pc-diag-compact"><div id="pcDiagConnectionResult">Mac接続：未確認</div><button type="button" id="pcDiagRefresh" style="padding:8px 12px;margin-top:5px;border-radius:8px;border:1px solid #91b7d3;background:#fff">状態を更新</button></div></div></div></div></section></main><div class="coach"><img src="images/sora_coach.png" alt="ソラ教官"><div class="coach-message" id="coachMessage" aria-live="polite">まずは右のキャンバスで翼に色をぬろう！</div><div class="coach-nav"><button class="coach-back" id="coachBack" disabled>◀ もどる</button><button class="coach-next" id="coachNext">つぎへ ▶</button></div></div>
 <div class="print-overlay" id="printOverlay" role="dialog" aria-label="A6印刷プレビュー"><div class="print-dialog"><div class="print-actions"><strong>A6横・2作品×2枚の予備印刷プレビュー</strong><button class="primary" id="doPrint">印刷する</button><button id="closePrint">閉じる</button></div><div class="sheet-viewport"><div class="print-sheet" id="printSheet"><div class="print-cell"></div><div class="print-cell"></div><div class="print-cell"></div><div class="print-cell"></div></div></div></div></div><div id="completionScreen" class="completion-screen" role="dialog" aria-modal="true" aria-label="空飛ぶクルマ完成" hidden>
  <div class="completion-card">
   
-  <div class="completion-image-wrap"><img id="completionImage" alt="完成した空飛ぶクルマの斜め上からの姿"></div>
-  <div class="completion-coach"><img src="images/sora_coach.png" alt="ソラ教官"><div class="completion-message" id="completionMessage"></div></div><div id="pcPrintStatus" hidden aria-live="polite"></div><button type="button" id="retryPcPrint" style="display:none;margin:5px auto;padding:9px;border-radius:8px;border:1px solid #7ba9c7;background:white">印刷画像を再送信</button><button type="button" id="launchColoredAR" class="ar-launch">目の前に機体を出そう！</button>
+  <div class="completion-image-wrap" id="completionSpinArea"><img id="completionImage" draggable="false" alt="完成した空飛ぶクルマ。指で左右にスワイプすると回転します"><div class="spin-hint">指でスワイプして機体を回そう！</div></div>
+  <div class="completion-coach"><img src="images/sora_coach.png" alt="ソラ教官"><div class="completion-message" id="completionMessage"></div></div><div id="pcPrintStatus" hidden aria-live="polite"></div><button type="button" id="retryPcPrint" style="display:none;margin:5px auto;padding:9px;border-radius:8px;border:1px solid #7ba9c7;background:white">印刷画像を再送信</button><div class="completion-next-guide">タブレットを持ったままジオラマのところに移動したら「次へ」を押そう！</div><button type="button" id="launchColoredAR" class="ar-launch">次へ ▶</button>
    </div><div class="completion-staff-slot" id="completionStaffSlot"></div><div class="confetti-layer" id="confettiLayer" aria-hidden="true"></div>
  
  
@@ -549,9 +558,9 @@ renderPrintSheet();
  $('#aircraftName').addEventListener('input',e=>{const v=Array.from(e.target.value);if(v.length>10)e.target.value=v.slice(0,10).join('');});$('#aircraftName').addEventListener('keydown',e=>{if(e.key==='Enter')$('#saveName').click();});
 
  // 3D表示中の機体を現在の斜め上視点から画像化（印刷画像には影響しない）。
- function snapshotFinishedAircraft(){
+ function snapshotFinishedAircraft(resetCamera=true){
    if(!model)return null;
-   resetView();
+   if(resetCamera)resetView();
    const sceneEl=$('a-scene'), renderer=sceneEl.renderer;
    const cam=$('#camera').getObject3D('camera');
    if(!renderer||!cam)return null;
@@ -636,7 +645,7 @@ renderPrintSheet();
    });
  }
  $('#launchColoredAR').addEventListener('click',async()=>{
-   const button=$('#launchColoredAR');button.disabled=true;button.textContent='ARを準備しています…';
+   const button=$('#launchColoredAR');button.disabled=true;button.textContent='フライトを準備しています…';
    try{
      // 3D側と同じUV方向。翼のみ水平方向に反転している点に注意。
      for(const part of ['top','side']){
@@ -646,10 +655,24 @@ renderPrintSheet();
        tc.drawImage(l.canvas,0,0);tc.setTransform(1,0,0,1,0,0);
      }
      await saveARDesign({top:layers.top.textureCanvas.toDataURL('image/png'),side:layers.side.textureCanvas.toDataURL('image/png'),name:aircraftName});
-     window.location.href='./ar-colored.html';
-   }catch(error){console.error(error);alert('ARデータの保存に失敗しました。空き容量をご確認ください。');button.disabled=false;button.textContent='目の前に機体を出そう！';}
+     window.location.href='./AirTaxi_Offline.html';
+   }catch(error){console.error(error);alert('ARデータの保存に失敗しました。空き容量をご確認ください。');button.disabled=false;button.textContent='次へ ▶';}
  });
 
+
+ $('#staffLaunchAR').addEventListener('click',async()=>{
+   const btn=$('#staffLaunchAR');btn.disabled=true;
+   try{
+     for(const part of ['top','side']){
+       const l=layers[part],tc=l.textureCtx;
+       tc.setTransform(1,0,0,1,0,0);tc.clearRect(0,0,1024,1024);
+       if(part==='top')tc.setTransform(-1,0,0,1,1024,0);
+       tc.drawImage(l.canvas,0,0);tc.setTransform(1,0,0,1,0,0);
+     }
+     await saveARDesign({top:layers.top.textureCanvas.toDataURL('image/png'),side:layers.side.textureCanvas.toDataURL('image/png'),name:aircraftName});
+     window.location.href='./ar-colored.html';
+   }catch(error){console.error(error);alert('ARの準備に失敗しました。');btn.disabled=false;}
+ });
  // PC print transfer. Store jobs in IndexedDB before transmission so brief Wi-Fi outages do not lose work.
  const PRINT_DB='dreamon-pc-print-v1';
  function printStore(mode,fn){return new Promise((resolve,reject)=>{const req=indexedDB.open(PRINT_DB,1);req.onupgradeneeded=()=>req.result.createObjectStore('jobs',{keyPath:'id'});req.onerror=()=>reject(req.error);req.onsuccess=()=>{const db=req.result,tx=db.transaction('jobs',mode);let result;try{result=fn(tx.objectStore('jobs'));}catch(e){db.close();reject(e);return;}tx.oncomplete=()=>{db.close();resolve(result?.result);};tx.onerror=()=>{db.close();reject(tx.error);};};});}
@@ -719,6 +742,20 @@ renderPrintSheet();
    completion.hidden=false;
    queuePcPrint();
  }
+ // 完成画面：塗り絵プレビューと同じカメラを指で回し、画像を再描画する。
+ const spinArea=$('#completionSpinArea');
+ let spinPointer=null,spinFrame=0,spinLastDraw=0;
+ function redrawCompletionSpin(){
+   spinFrame=0;
+   if($('#completionScreen').hidden)return;
+   try{const url=snapshotFinishedAircraft(false);if(url)$('#completionImage').src=url;}
+   catch(e){console.warn('完成プレビュー更新失敗',e);}
+   spinLastDraw=performance.now();
+ }
+ function scheduleSpin(){if(spinFrame)return;if(performance.now()-spinLastDraw<75){spinFrame=requestAnimationFrame(redrawCompletionSpin);return;}spinFrame=requestAnimationFrame(redrawCompletionSpin);}
+ spinArea.addEventListener('pointerdown',e=>{e.preventDefault();spinPointer={id:e.pointerId,x:e.clientX,y:e.clientY};spinArea.setPointerCapture(e.pointerId);});
+ spinArea.addEventListener('pointermove',e=>{if(!spinPointer||spinPointer.id!==e.pointerId)return;e.preventDefault();yaw-=(e.clientX-spinPointer.x)*.006;pitch=Math.max(-1.35,Math.min(1.35,pitch+(e.clientY-spinPointer.y)*.006));spinPointer.x=e.clientX;spinPointer.y=e.clientY;cameraUpdate();scheduleSpin();});
+ for(const type of ['pointerup','pointercancel','lostpointercapture'])spinArea.addEventListener(type,e=>{if(spinPointer&&spinPointer.id===e.pointerId)spinPointer=null;});
  setStep(0);
  // 3Dビューは1本指で回転のみ。2本指ピンチによる拡大縮小を無効化。
  const pointers=new Map();

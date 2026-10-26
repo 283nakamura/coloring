@@ -1452,7 +1452,7 @@ AFRAME.registerComponent("spin-rotors", {
               id="external-aircraft-alia"
               src="models/aircraft_ar_meters.glb"
 
-              scale="72 72 72"
+              scale="108 108 108"
               rotation="0 150 0"
 
               brighten-glass="
@@ -2933,7 +2933,7 @@ AFRAME.registerComponent("spin-rotors", {
           updateStartupLoadingMessage(
             loadedExternalModels.size >= 2
               ? 'まもなく開始できます'
-              : 'もう一機を準備しています…'
+              : '機体を準備しています…'
           );
 
           tryFinishStartup();
@@ -4742,9 +4742,14 @@ AFRAME.registerComponent("spin-rotors", {
 #aircraft-selector,#aircraft-selection-panel,#aircraft-selection-overlay{display:none!important}
 #personal-flight-gate{position:fixed;inset:0;z-index:99999;background:linear-gradient(135deg,#eaf7ff,#fff4d7);display:flex;align-items:center;justify-content:center;padding:20px;font-family:system-ui,sans-serif;color:#194b70}
 #personal-flight-gate>div{max-width:600px;background:white;border-radius:22px;padding:30px;text-align:center;box-shadow:0 12px 40px #1b4c6b33}
+#personal-flight-gate h1{font-weight:950;font-size:clamp(28px,4vw,42px);margin:0 0 18px}
+.personal-flight-coach{display:flex;align-items:center;gap:14px;margin:16px auto 24px;text-align:left}
+.personal-flight-coach img{width:86px;height:86px;object-fit:contain;flex-shrink:0}
+.personal-flight-coach p{position:relative;background:#fff0b8;border:2px solid #e6a73c;border-radius:16px;padding:16px;font-weight:850;font-size:clamp(17px,2.2vw,23px);margin:0;flex:1}
+.personal-flight-coach p:before{content:"";position:absolute;left:-14px;top:35%;border-top:12px solid transparent;border-bottom:12px solid transparent;border-right:14px solid #e6a73c}
 #personal-flight-gate button{border:0;border-radius:14px;padding:16px 25px;background:#ffb34c;font-size:22px;font-weight:900;color:#453000}
 </style>
-<div id="personal-flight-gate"><div><h1>きみの空飛ぶクルマで出発！</h1><p id="personal-flight-status">塗り絵のデザインを読み込んでいます…</p><button id="personal-flight-start" disabled>フライト体験スタート！</button></div></div>
+<div id="personal-flight-gate"><div><h1>きみの空飛ぶクルマで出発！</h1><div class="personal-flight-coach"><img src="images/sora_coach.png" alt="ソラ教官"><p id="personal-flight-status">塗り絵のデザインを読み込んでいます…</p></div><button id="personal-flight-start" disabled>フライト体験スタート！</button></div></div>
 <script>
 (function(){
 const status=document.getElementById('personal-flight-status'),button=document.getElementById('personal-flight-start');
