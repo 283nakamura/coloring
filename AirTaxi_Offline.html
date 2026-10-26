@@ -2583,6 +2583,40 @@ AFRAME.registerComponent("spin-rotors", {
       }
 
 
+      // iPad Safari: 動画デコードとA-Frame描画の切り分け用表示。
+      function showVideoDiagnostic(videoEl, stage) {
+        let box = document.getElementById('video-diagnostic');
+        if (!box) {
+          box = document.createElement('div');
+          box.id = 'video-diagnostic';
+          box.style.cssText = 'position:fixed;top:env(safe-area-inset-top,8px);left:8px;z-index:99999;background:#111d;color:#fff;padding:6px 10px;border-radius:7px;font:12px/1.5 monospace;pointer-events:none;max-width:95vw';
+          document.body.appendChild(box);
+        }
+        box.textContent = `${videoEl.id}: ${stage} / ready=${videoEl.readyState} / time=${videoEl.currentTime.toFixed(1)} / paused=${videoEl.paused} / ${videoEl.error ? 'error='+videoEl.error.code : 'no error'}`;
+      }
+
+      // A-Frameが先に作った黒いVideoTextureを、再生中の動画で張り直す。
+      function rebindPlayingVideoTexture(sphereEl, videoEl) {
+        const materialComponent = sphereEl.components && sphereEl.components.material;
+        const mesh = sphereEl.getObject3D('mesh');
+        const THREE = AFRAME.THREE;
+        if (!mesh || !THREE || videoEl.readyState < 2) return false;
+        const texture = new THREE.VideoTexture(videoEl);
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.generateMipmaps = false;
+        texture.needsUpdate = true;
+        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        mats.filter(Boolean).forEach(mat => {
+          if (mat.map && mat.map !== texture && mat.map.isVideoTexture) mat.map.dispose();
+          mat.map = texture;
+          mat.needsUpdate = true;
+        });
+        // A-Frameが後から旧テクスチャに戻さないようにする。
+        if (materialComponent && materialComponent.material) materialComponent.material.map = texture;
+        return true;
+      }
+
       async function playVideoOnce(videoEl) {
         currentVideo = videoEl;
 
@@ -4573,10 +4607,18 @@ AFRAME.registerComponent("spin-rotors", {
         showSelectedCockpitAircraft();
         startCockpitRotor();
 
-        await playVideoOnce(
-          selectedVideo
-        );
+        showVideoDiagnostic(selectedVideo, '再生開始');
+        await playVideoOnce(selectedVideo);
         await waitForVideoFirstFrame(selectedVideo);
+        const bound = rebindPlayingVideoTexture(selectedSphere, selectedVideo);
+        showVideoDiagnostic(selectedVideo, bound ? 'テクスチャ再設定済' : 'テクスチャ未設定');
+        const diagnosticTimer = window.setInterval(() => {
+          if (currentVideo !== selectedVideo || selectedVideo.ended) {
+            window.clearInterval(diagnosticTimer);
+            return;
+          }
+          showVideoDiagnostic(selectedVideo, bound ? '再生確認' : '映像未準備');
+        }, 1000);
 
         /*
          * A-Frameの球面へ動画テクスチャが反映されるまで
