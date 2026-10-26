@@ -1359,32 +1359,8 @@ AFRAME.registerComponent("spin-rotors", {
 
     </div>
 
-    <!-- A-Frame -->
-    <a-scene
-      id="airtaxi-scene"
-      embedded
-      vr-mode-ui="enabled: false"
-      device-orientation-permission-ui="enabled: false"
-      renderer="
-        antialias: true;
-        colorManagement: true;
-      "
-    >
-
-      <a-assets timeout="30000">
-
-        <!-- 固定翼付きタイプ -->
-        
-
-        <!-- マルチコプタータイプ -->
-        
-
-        <!-- 最初の外部視点用背景 -->
-        <img
-          id="virtual-bg"
-          src="images/flight_01.jpg"
-        >
-
+    <!-- Safari向け: 動画要素はa-assets外に配置し、A-Frameのアセット事前処理を回避 -->
+    <div id="flight-video-sources" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none" aria-hidden="true">
         <!-- before：2秒の360°動画 -->
         <video
           id="video-before"
@@ -1414,6 +1390,35 @@ AFRAME.registerComponent("spin-rotors", {
           crossorigin="anonymous"
           src="videos/flight_03.mp4"
         ></video>
+
+    </div>
+
+    <!-- A-Frame -->
+    <a-scene
+      id="airtaxi-scene"
+      embedded
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false"
+      renderer="
+        antialias: true;
+        colorManagement: true;
+      "
+    >
+
+      <a-assets timeout="30000">
+
+        <!-- 固定翼付きタイプ -->
+        
+
+        <!-- マルチコプタータイプ -->
+        
+
+        <!-- 最初の外部視点用背景 -->
+        <img
+          id="virtual-bg"
+          src="images/flight_01.jpg"
+        >
+
 
       </a-assets>
 
