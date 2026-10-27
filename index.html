@@ -588,7 +588,7 @@ function renderPrintSheet(){
 $('#addPrint').onclick=()=>{
  if(currentDesignQueued){alert('この作品はすでに予備保存されています。');return;}
  if(printQueue.length>=2)printQueue.shift();
- try{const shot=captureTopForSticker();const scale=.85*Math.min(1.28,44/shot.heightMM,72/shot.widthMM);printQueue.push({url:shot.url,widthMM:shot.widthMM*scale,heightMM:shot.heightMM*scale});currentDesignQueued=true;renderPrintSheet();alert('印刷待ちに追加しました（'+printQueue.length+'/2作品）');}
+ try{const shot=captureTopForSticker();const scale=Math.min(1.28,44/shot.heightMM,72/shot.widthMM);printQueue.push({url:shot.url,widthMM:shot.widthMM*scale,heightMM:shot.heightMM*scale});currentDesignQueued=true;renderPrintSheet();alert('印刷待ちに追加しました（'+printQueue.length+'/2作品）');}
  catch(err){console.error(err);alert('印刷用画像の作成に失敗しました：'+err.message);}
 };
 $('#showPrint').onclick=()=>{renderPrintSheet();$('#printOverlay').classList.add('open');};
@@ -668,7 +668,7 @@ renderPrintSheet();
      if(printQueue.length>=2)printQueue.shift();
      try{
        const shot=captureTopForSticker();
-       const scale=.85*Math.min(1.28,44/shot.heightMM,72/shot.widthMM);
+       const scale=Math.min(1.28,44/shot.heightMM,72/shot.widthMM);
        printQueue.push({url:shot.url,widthMM:shot.widthMM*scale,heightMM:shot.heightMM*scale});
        currentDesignQueued=true;
        renderPrintSheet();
