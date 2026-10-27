@@ -4748,8 +4748,10 @@ AFRAME.registerComponent("spin-rotors", {
 .personal-flight-coach p{position:relative;background:#fff0b8;border:2px solid #e6a73c;border-radius:16px;padding:16px;font-weight:850;font-size:clamp(17px,2.2vw,23px);margin:0;flex:1}
 .personal-flight-coach p:before{content:"";position:absolute;left:-14px;top:35%;border-top:12px solid transparent;border-bottom:12px solid transparent;border-right:14px solid #e6a73c}
 #personal-flight-gate button{border:0;border-radius:14px;padding:16px 25px;background:#ffb34c;font-size:22px;font-weight:900;color:#453000}
+#personal-flight-gate .personal-flight-status-hidden{display:none}
+#personal-flight-gate .personal-flight-status-hidden.has-error{display:block;color:#a52240;background:#fff1f2;border-radius:10px;padding:10px 16px;margin:12px 0}
 </style>
-<div id="personal-flight-gate"><div><h1>きみの空飛ぶクルマで出発！</h1><div class="personal-flight-coach"><img src="images/sora_coach.png" alt="ソラ教官"><p id="personal-flight-status">塗り絵のデザインを読み込んでいます…</p></div><button id="personal-flight-start" disabled>フライト体験スタート！</button></div></div>
+<div id="personal-flight-gate"><div><h1>きみの空飛ぶクルマで出発！</h1><p id="personal-flight-status" class="personal-flight-status-hidden" aria-live="polite">塗り絵のデザインを読み込んでいます…</p><button id="personal-flight-start" disabled>フライト体験スタート！</button></div></div>
 <script>
 (function(){
 const status=document.getElementById('personal-flight-status'),button=document.getElementById('personal-flight-start');
@@ -4772,13 +4774,13 @@ async function ready(){try{
  el.addEventListener('model-loaded',()=>paintModel(el).catch(console.error));if(el.getObject3D('mesh'))await paintModel(el);
  }
  status.textContent='準備ができました。フライトを始めよう！';button.disabled=false;
-}catch(e){status.textContent='準備できませんでした：'+e.message;console.error(e)}}
+}catch(e){status.textContent='準備できませんでした：'+e.message;status.classList.add('has-error');console.error(e)}}
 button.addEventListener('click',async()=>{
  button.disabled=true;
  try{
  // The original app uses confirmAircraftSelection to unlock audio and orientation on a user gesture.
  await confirmAircraftSelection();document.getElementById('personal-flight-gate').remove();
- }catch(e){status.textContent='開始できませんでした：'+e.message;button.disabled=false;console.error(e)}
+ }catch(e){status.textContent='開始できませんでした：'+e.message;status.classList.add('has-error');button.disabled=false;console.error(e)}
 });
 ready();
 })();
