@@ -4758,43 +4758,44 @@ const status=document.getElementById('personal-flight-status'),button=document.g
 let design=null;
 function readDesign(){return new Promise((resolve,reject)=>{const r=indexedDB.open('aircraft-ar-design',1);r.onerror=()=>reject(r.error);r.onsuccess=()=>{const db=r.result,tx=db.transaction('designs','readonly'),q=tx.objectStore('designs').get('latest');q.onsuccess=()=>{resolve(q.result);db.close()};q.onerror=()=>reject(q.error)}})}
 function loadTexture(uri){return new Promise((resolve,reject)=>new THREE.TextureLoader().load(uri,resolve,undefined,reject))}
-// Match the side-texture placement used by the coloring screen's live 3D preview.
-// The saved drawing is intentionally unshifted; the GLB's side UV area needs +327px.
-const SIDE_PREVIEW_OFFSET_Y=327;
-async function makeFlightTextures(){
+// The saved side drawing is unshifted. The coloring app shifts it down 327px
+// only when displaying its 3D preview. Reproduce that transformation here.
+async function preparePersonalTextures(){
  const top=await loadTexture(design.top);
- const sideSource=await loadTexture(design.side);
+ const originalSide=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=reject;img.src=design.side});
  const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=1024;
- const ctx=canvas.getContext('2d');
- ctx.fillStyle='#ffffff';ctx.fillRect(0,0,1024,1024);
- const image=sideSource.image;
- ctx.drawImage(image,0,SIDE_PREVIEW_OFFSET_Y);
+ const ctx=canvas.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,1024,1024);
+ ctx.drawImage(originalSide,0,327);
  const side=new THREE.CanvasTexture(canvas);
- for(const t of [top,side]){t.flipY=false;t.colorSpace=THREE.SRGBColorSpace;t.needsUpdate=true}
- sideSource.dispose();
+ for(const tex of [top,side]){tex.flipY=false;tex.colorSpace=THREE.SRGBColorSpace;tex.needsUpdate=true}
  return {top,side};
 }
-let flightTexturesPromise=null;
 async function paintModel(el){
  const obj=el.getObject3D('mesh');if(!obj||!design)return;
- const tex=await (flightTexturesPromise||(flightTexturesPromise=makeFlightTextures()));
- let assigned=0,sideAssigned=0;
- obj.traverse(mesh=>{if(!mesh.isMesh)return;
+ const tex=await preparePersonalTextures();
+ let assigned=0,uv1Count=0;
+ obj.traverse(mesh=>{
+  if(!mesh.isMesh)return;
   const mats=Array.isArray(mesh.material)?mesh.material:[mesh.material];
-  const changed=mats.map(m=>{if(!m)return m;
+  const changed=mats.map(m=>{
+   if(!m)return m;
    const part=m.name==='M_Paint_Top'?'top':m.name==='M_Paint_Side'?'side':null;
    if(!part)return m;
-   const clone=m.clone();const originalChannel=m.map?.channel;
-   const channel=(originalChannel===1 && mesh.geometry?.attributes?.uv1)?1:0;
+   const clone=m.clone();
+   // GLB has TWO M_Paint_Side materials. One uses TEXCOORD_1.
+   // Each material must have its own Texture instance because channel is
+   // a Texture property, not a Material property.
+   const channel=(m.map?.channel===1 && mesh.geometry?.attributes?.uv1)?1:0;
    clone.map=tex[part].clone();clone.map.channel=channel;
-   clone.map.flipY=false;clone.map.colorSpace=THREE.SRGBColorSpace;clone.map.needsUpdate=true;
-   clone.color.set('#ffffff');clone.needsUpdate=true;assigned++;
-   if(part==='side')sideAssigned++;
+   clone.map.flipY=false;clone.map.colorSpace=THREE.SRGBColorSpace;
+   clone.map.needsUpdate=true;
+   clone.color.set('#ffffff');clone.needsUpdate=true;
+   assigned++;if(channel===1)uv1Count++;
    return clone;
   });
   mesh.material=Array.isArray(mesh.material)?changed:changed[0];
  });
- console.log('[Personal flight] textures assigned:',assigned,'side:',sideAssigned,'side offset:',SIDE_PREVIEW_OFFSET_Y);
+ console.log('[Personal flight] assigned textures:',assigned,'UV1 side materials:',uv1Count);
 }
 async function ready(){try{
  design=await readDesign();if(!design||!design.top||!design.side)throw Error('塗り絵データがありません。先に塗り絵を完成させてください。');
