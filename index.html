@@ -257,6 +257,8 @@ body.naming-step .tools,body.naming-step .tabs{pointer-events:none}
 .completion-next-guide{order:3;font-size:clamp(15px,1.9vw,21px);font-weight:900;color:#194d77;text-align:center;padding:5px 12px;line-height:1.45}
 .completion-card .ar-launch{order:4;min-width:190px}
 @media(orientation:landscape){.completion-next-guide{font-size:clamp(14px,1.7vw,19px)}.completion-card{gap:5px}}
+.tools,.tools label,.tools button{-webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important}
+.drawing,#draw{overscroll-behavior:contain}
 </style><style>
 /* Start screen overlays (does not hide) the underlying A-Frame canvas, so the GLB starts loading immediately. */
 .welcome-cover{position:fixed;inset:0;z-index:99990;display:flex;flex-direction:column;background:#0b4388;overflow:hidden;overscroll-behavior:contain}
@@ -368,9 +370,48 @@ function clampPan(){const r=draw.getBoundingClientRect();const baseW=r.width/zoo
 function updateZoom(){clampPan();drawingEl.style.setProperty('--zoom',zoom);drawingEl.style.setProperty('--pan-x',panX+'px');drawingEl.style.setProperty('--pan-y',panY+'px');}
 function point(e){const r=drawingEl.getBoundingClientRect();const size=Math.min(r.height,r.width);const left=r.left+(r.width-size)/2,top=r.top+(r.height-size)/2;return{x:((e.clientX-left-size/2-panX)/zoom+size/2)*1024/size,y:((e.clientY-top-size/2-panY)/zoom+size/2)*1024/size};}
 function stroke(a,b){const l=layers[active],c=l.ctx;c.strokeStyle=mode==='eraser'?'#ffffff':$('#color').value;c.lineWidth=Number($('#size').value);c.lineCap='round';c.lineJoin='round';c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();refresh();}
-drawingEl.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'){e.preventDefault();drawingEl.setPointerCapture(e.pointerId);touchPoints.set(e.pointerId,{x:e.clientX,y:e.clientY});touchStart=null;return;}if(e.pointerType!=='pen'||!e.target.closest('#draw'))return;e.preventDefault();draw.setPointerCapture(e.pointerId);save();drawing=true;last=point(e);stroke(last,last);});
-drawingEl.addEventListener('pointermove',e=>{if(e.pointerType==='touch'&&touchPoints.has(e.pointerId)){e.preventDefault();const prev=touchPoints.get(e.pointerId);touchPoints.set(e.pointerId,{x:e.clientX,y:e.clientY});const pts=[...touchPoints.values()];if(pts.length===2){const d=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);const cx=(pts[0].x+pts[1].x)/2,cy=(pts[0].y+pts[1].y)/2;if(touchStart){const z=Math.max(1,Math.min(4,touchStart.zoom*d/touchStart.distance));panX=touchStart.panX+(cx-touchStart.cx);panY=touchStart.panY+(cy-touchStart.cy);zoom=z;}touchStart={distance:d,zoom:zoom,panX:panX,panY:panY,cx,cy};}else if(pts.length===1&&zoom>1){panX+=e.clientX-prev.x;panY+=e.clientY-prev.y;touchStart=null;}updateZoom();return;}if(e.pointerType!=='pen'||!drawing)return;e.preventDefault();const p=point(e);stroke(last,p);last=p;});
-function endDrawingPointer(e){if(e.pointerType==='touch'){touchPoints.delete(e.pointerId);touchStart=null;}else if(e.pointerType==='pen'){drawing=false;last=null;}}
+// iPadの指操作もペンとして扱う。描画領域での文字選択・色ラベルの誤選択を防止。
+let touchPaintingId=null;
+drawingEl.addEventListener('pointerdown',e=>{
+ if(e.pointerType==='touch'){
+  e.preventDefault();drawingEl.setPointerCapture(e.pointerId);
+  touchPoints.set(e.pointerId,{x:e.clientX,y:e.clientY});touchStart=null;
+  if(touchPoints.size===1 && e.target.closest('#draw')){
+   save();touchPaintingId=e.pointerId;drawing=true;last=point(e);stroke(last,last);
+  }else if(touchPoints.size>=2){
+   // 2本指は拡大縮小専用。1本指の描画を中断する。
+   touchPaintingId=null;drawing=false;last=null;
+  }
+  return;
+ }
+ if(e.pointerType!=='pen'||!e.target.closest('#draw'))return;
+ e.preventDefault();draw.setPointerCapture(e.pointerId);save();drawing=true;last=point(e);stroke(last,last);
+});
+drawingEl.addEventListener('pointermove',e=>{
+ if(e.pointerType==='touch'&&touchPoints.has(e.pointerId)){
+  e.preventDefault();const prev=touchPoints.get(e.pointerId);
+  touchPoints.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  const pts=[...touchPoints.values()];
+  if(pts.length===2){
+   const d=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);
+   const cx=(pts[0].x+pts[1].x)/2,cy=(pts[0].y+pts[1].y)/2;
+   if(touchStart){const z=Math.max(1,Math.min(4,touchStart.zoom*d/touchStart.distance));panX=touchStart.panX+(cx-touchStart.cx);panY=touchStart.panY+(cy-touchStart.cy);zoom=z;}
+   touchStart={distance:d,zoom:zoom,panX:panX,panY:panY,cx,cy};
+  }else if(pts.length===1){
+   if(touchPaintingId===e.pointerId&&drawing){const p=point(e);stroke(last,p);last=p;}
+   else if(zoom>1){panX+=e.clientX-prev.x;panY+=e.clientY-prev.y;touchStart=null;}
+  }
+  updateZoom();return;
+ }
+ if(e.pointerType!=='pen'||!drawing)return;
+ e.preventDefault();const p=point(e);stroke(last,p);last=p;
+});
+function endDrawingPointer(e){
+ if(e.pointerType==='touch'){
+  touchPoints.delete(e.pointerId);touchStart=null;
+  if(touchPaintingId===e.pointerId){touchPaintingId=null;drawing=false;last=null;}
+ }else if(e.pointerType==='pen'){drawing=false;last=null;}
+}
 drawingEl.addEventListener('pointerup',endDrawingPointer);drawingEl.addEventListener('pointercancel',endDrawingPointer);
 drawingEl.addEventListener('dblclick',e=>{if(e.pointerType==='touch'){zoom=1;panX=panY=0;updateZoom();}});
 aircraft.addEventListener('model-loaded',e=>{model=e.detail.model;let assigned=0;model.traverse(obj=>{if(!obj.isMesh)return;const old=Array.isArray(obj.material)?obj.material:[obj.material];const mapped=old.map(mat=>{if(!mat)return mat;const part=mat.name==='M_Paint_Top'?'top':mat.name==='M_Paint_Side'?'side':null;if(!part)return mat;const clone=mat.clone();const channel=(mat.map?.channel===1 && obj.geometry?.attributes?.uv1)?1:0;clone.map=layers[part].texture.clone();clone.map.channel=channel;clone.map.flipY=false;clone.map.colorSpace=THREE.SRGBColorSpace;clone.map.needsUpdate=true;clone.color.set('#ffffff');clone.transparent=false;clone.opacity=1;clone.needsUpdate=true;layers[part].textures??=[];layers[part].textures.push(clone.map);assigned++;return clone;});obj.material=Array.isArray(obj.material)?mapped:mapped[0];});for(const part of ['top','side']){const original=layers[part].texture;layers[part].texture={set needsUpdate(v){if(v)for(const tex of layers[part].textures||[])tex.needsUpdate=true;}};original.dispose();}model.updateMatrixWorld(true);const bounds=new THREE.Box3().setFromObject(model),size=bounds.getSize(new THREE.Vector3());center=bounds.getCenter(new THREE.Vector3());radius=Math.max(size.length()/2,.01);const camera=$('#camera').getObject3D('camera');const fov=((camera?.fov)||45)*Math.PI/180,aspect=Math.max(viewer.clientWidth/Math.max(viewer.clientHeight,1),.2);initialDistance=Math.max(radius/Math.sin(Math.min(fov,2*Math.atan(Math.tan(fov/2)*aspect))/2)*1.15/1.6,.5);resetView();status.style.display="none";refresh();});aircraft.addEventListener('model-error',()=>{status.style.display='block';status.textContent='GLBを読み込めません。modelsフォルダを確認してください。';});// ---- A6ラベルシール印刷（3Dモデル上面をオルソ投影で撮影） ----
@@ -542,10 +583,16 @@ function captureTopForSticker(){
  const outer=smooth(smooth(expanded));
  // 名前を後翼の上に配置できるよう、切り取り線の上辺を水平な帯状に延長する。
  // 機体の描画・色・プロペラには触れず、外側カットラインのマスクだけを拡張。
+ // 上辺を左右の翼端間で完全に水平にする（既存の曲線の上端だけ置換）。
  const headerLeft=Math.round(w*.085),headerRight=Math.round(w*.915);
  const headerTop=Math.max(2,Math.round(h*.012)),headerBottom=Math.round(h*.155);
- for(let yy=headerTop;yy<=headerBottom;yy++){
-  for(let xx=headerLeft;xx<=headerRight;xx++)outer[yy*w+xx]=1;
+ // 中央の帯と翼端の間に残っていた凹凸を除き、上端を同一のY座標に固定する。
+ for(let xx=headerLeft;xx<=headerRight;xx++){
+  let occupied=false;
+  for(let yy=0;yy<=headerBottom;yy++)if(outer[yy*w+xx]){occupied=true;break;}
+  if(!occupied)continue;
+  for(let yy=0;yy<headerTop;yy++)outer[yy*w+xx]=0;
+  for(let yy=headerTop;yy<=headerBottom;yy++)outer[yy*w+xx]=1;
  }
  // 2本の線を重ねる：機体そのものの外形線＋3mm外側の実線カットライン。
  const edge=document.createElement('canvas');edge.width=w;edge.height=h;
