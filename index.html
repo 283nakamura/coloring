@@ -540,6 +540,13 @@ function captureTopForSticker(){
   }
  }
  const outer=smooth(smooth(expanded));
+ // 名前を後翼の上に配置できるよう、切り取り線の上辺を水平な帯状に延長する。
+ // 機体の描画・色・プロペラには触れず、外側カットラインのマスクだけを拡張。
+ const headerLeft=Math.round(w*.12),headerRight=Math.round(w*.88);
+ const headerTop=Math.max(2,Math.round(h*.018)),headerBottom=Math.round(h*.155);
+ for(let yy=headerTop;yy<=headerBottom;yy++){
+  for(let xx=headerLeft;xx<=headerRight;xx++)outer[yy*w+xx]=1;
+ }
  // 2本の線を重ねる：機体そのものの外形線＋3mm外側の実線カットライン。
  const edge=document.createElement('canvas');edge.width=w;edge.height=h;
  const ec=edge.getContext('2d');const ed=ec.createImageData(w,h);
@@ -559,14 +566,14 @@ function makeNamedSticker(shot,name){
  const nameText=name||'なまえなし号';const source=shot.canvas;
  const c=document.createElement('canvas');c.width=source.width;c.height=source.height;
  const g=c.getContext('2d');g.drawImage(source,0,0);
- // 後主翼上部の内側へ固定配置。白地を設け、カットラインには触れない。
+ // 後翼より上の白い余白に名前を配置。翼への白いラベルの重ね描きはしない。
+ // カットライン上辺は captureTopForSticker() 側で一直線に拡張済み。
  const w=c.width,h=c.height;
- const labelW=w*.55,labelH=Math.min(h*.09,w*.075);
- const x=(w-labelW)/2,y=h*.105;
- g.fillStyle='rgba(255,255,255,0.95)';g.beginPath();g.roundRect(x,y,labelW,labelH,labelH*.3);g.fill();
- let font=Math.round(labelH*.62);g.textAlign='center';g.textBaseline='middle';
- do{g.font='900 '+font+'px system-ui,sans-serif';if(g.measureText(nameText).width<=labelW*.9)break;font-=2;}while(font>12);
- g.fillStyle='#153b73';g.fillText(nameText,w/2,y+labelH/2);
+ const labelW=w*.60,labelH=Math.min(h*.07,w*.06);
+ const centerY=h*.078;
+ let font=Math.round(labelH*.72);g.textAlign='center';g.textBaseline='middle';
+ do{g.font='900 '+font+'px system-ui,sans-serif';if(g.measureText(nameText).width<=labelW*.92)break;font-=2;}while(font>12);
+ g.fillStyle='#222222';g.fillText(nameText,w/2,centerY);
  return {url:c.toDataURL('image/png'),widthMM:shot.widthMM,heightMM:shot.heightMM,name:nameText};
 }
 function renderPrintSheet(){
