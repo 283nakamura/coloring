@@ -567,8 +567,7 @@ function makeNamedSticker(shot,name){
  let font=Math.round(labelH*.62);g.textAlign='center';g.textBaseline='middle';
  do{g.font='900 '+font+'px system-ui,sans-serif';if(g.measureText(nameText).width<=labelW*.9)break;font-=2;}while(font>12);
  g.fillStyle='#153b73';g.fillText(nameText,w/2,y+labelH/2);
- const scale=Math.min(1.28,44/shot.heightMM,72/shot.widthMM);
- return {url:c.toDataURL('image/png'),widthMM:shot.widthMM*scale,heightMM:shot.heightMM*scale,name:nameText};
+ return {url:c.toDataURL('image/png'),widthMM:shot.widthMM,heightMM:shot.heightMM,name:nameText};
 }
 function renderPrintSheet(){
  const cells=[...document.querySelectorAll('#printSheet .print-cell')];
@@ -588,7 +587,7 @@ function renderPrintSheet(){
 $('#addPrint').onclick=()=>{
  if(currentDesignQueued){alert('この作品はすでに予備保存されています。');return;}
  if(printQueue.length>=2)printQueue.shift();
- try{const shot=captureTopForSticker();const scale=Math.min(1.28,44/shot.heightMM,72/shot.widthMM);printQueue.push({url:shot.url,widthMM:shot.widthMM*scale,heightMM:shot.heightMM*scale});currentDesignQueued=true;renderPrintSheet();alert('印刷待ちに追加しました（'+printQueue.length+'/2作品）');}
+ try{const shot=makeNamedSticker(captureTopForSticker(),aircraftName);const scale=Math.min(1.28,44/shot.heightMM,72/shot.widthMM);printQueue.push({url:shot.url,widthMM:shot.widthMM*scale,heightMM:shot.heightMM*scale});currentDesignQueued=true;renderPrintSheet();alert('印刷待ちに追加しました（'+printQueue.length+'/2作品）');}
  catch(err){console.error(err);alert('印刷用画像の作成に失敗しました：'+err.message);}
 };
 $('#showPrint').onclick=()=>{renderPrintSheet();$('#printOverlay').classList.add('open');};
@@ -667,7 +666,7 @@ renderPrintSheet();
    if(!currentDesignQueued){
      if(printQueue.length>=2)printQueue.shift();
      try{
-       const shot=captureTopForSticker();
+       const shot=makeNamedSticker(captureTopForSticker(),aircraftName);
        const scale=Math.min(1.28,44/shot.heightMM,72/shot.widthMM);
        printQueue.push({url:shot.url,widthMM:shot.widthMM*scale,heightMM:shot.heightMM*scale});
        currentDesignQueued=true;
@@ -786,7 +785,7 @@ renderPrintSheet();
      $('#retryPcPrint').style.display='block';
    }finally{printSending=false;await refreshPcDiagnostics();}
  }
- async function queuePcPrint(){const st=$('#pcPrintStatus');try{if(st)st.textContent='印刷画像を準備しています…';const shot=captureTopForSticker();const id=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'_'+Math.random().toString(36).slice(2));await printStore('readwrite',store=>store.put({id,name:aircraftName||'なまえなし号',image:shot.url}));await flushPcPrint();}catch(err){console.error('印刷画像準備失敗',err);pcDiagLast='画像生成または保存に失敗';pcDiagError=(err.name||'Error')+'：'+(err.message||String(err));if(st)st.textContent='印刷画像を作成できませんでした。スタッフにお知らせください。';$('#retryPcPrint').style.display='block';await refreshPcDiagnostics();}}
+ async function queuePcPrint(){const st=$('#pcPrintStatus');try{if(st)st.textContent='印刷画像を準備しています…';const shot=makeNamedSticker(captureTopForSticker(),aircraftName);const id=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'_'+Math.random().toString(36).slice(2));await printStore('readwrite',store=>store.put({id,name:aircraftName||'なまえなし号',image:shot.url}));await flushPcPrint();}catch(err){console.error('印刷画像準備失敗',err);pcDiagLast='画像生成または保存に失敗';pcDiagError=(err.name||'Error')+'：'+(err.message||String(err));if(st)st.textContent='印刷画像を作成できませんでした。スタッフにお知らせください。';$('#retryPcPrint').style.display='block';await refreshPcDiagnostics();}}
  $('#retryPcPrint').onclick=async()=>{const jobs=await pendingPrintJobs().catch(()=>[]);if(jobs.length)await flushPcPrint();else await queuePcPrint();};
  window.addEventListener('online',flushPcPrint);document.addEventListener('visibilitychange',()=>{if(!document.hidden)flushPcPrint();});
  setTimeout(flushPcPrint,2500);setTimeout(refreshPcDiagnostics,3000);
