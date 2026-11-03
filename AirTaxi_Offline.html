@@ -1730,7 +1730,8 @@ AFRAME.registerComponent("spin-rotors", {
       const BGM_VOLUME = 0.15;
 
       const TAKEOFF_DURATION = 5000;
-      const FORWARD_DURATION = 4500;
+      const FORWARD_DURATION = 7500;
+      const TILTWING_TRANSITION_DURATION = 2500;
 
       const PREVIEW_POSITION_LANDSCAPE =
         '-28 3 -70';
@@ -3800,11 +3801,11 @@ AFRAME.registerComponent("spin-rotors", {
         const c = getTiltwing();
         if (!c) return;
         c.setTilt(-75, 0);
-        c.setRpm(1100);
+        c.setRpm(3300);
       }
       function transitionTiltwingToForward() {
         const c = getTiltwing();
-        if (c) c.setTilt(0, Math.min(FORWARD_DURATION * 0.85, 5500));
+        if (c) c.setTilt(0, TILTWING_TRANSITION_DURATION);
       }
 
       function clearAllFlightAnimations() {
@@ -4172,6 +4173,8 @@ AFRAME.registerComponent("spin-rotors", {
           );
           if (selectedAircraftType === 'alia') transitionTiltwingToForward();
 
+          // ALIAはチルト完了後に前進開始。EHangは従来どおり即座に前進。
+          window.setTimeout(() => {
           car.setAttribute(
             'animation__forward',
             {
@@ -4214,6 +4217,7 @@ AFRAME.registerComponent("spin-rotors", {
           window.setTimeout(() => {
             startBeforeScene();
           }, FORWARD_DURATION);
+          }, selectedAircraftType === 'alia' ? TILTWING_TRANSITION_DURATION : 0);
         }, TAKEOFF_DURATION);
       }
 
