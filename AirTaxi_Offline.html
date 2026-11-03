@@ -4209,7 +4209,7 @@ AFRAME.registerComponent("spin-rotors", {
             const updateForwardMotion = (now) => {
               if (currentPhase !== 'intro') return;
               const t = Math.min(1, Math.max(0, (now - flightStartTime) / FORWARD_DURATION));
-              const progress = 0.18 * t + 0.82 * Math.pow(t, 7.1);
+              const progress = 0.18 * t + 0.82 * Math.pow(t, 7.1) + 0.055 * 16 * t * t * (1 - t) * (1 - t);
               const p = forwardStart.clone().lerp(forwardEnd, progress);
               car.object3D.position.copy(p);
               if (t < 1) window.requestAnimationFrame(updateForwardMotion);
