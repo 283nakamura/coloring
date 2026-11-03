@@ -1270,7 +1270,7 @@ AFRAME.registerComponent("spin-rotors", {
             </button>
 
             <button
-              id="aircraft-type-ehang"
+              id="aircraft-type-ehang" style="display:none"
               class="selector-button"
               type="button"
               aria-pressed="false"
@@ -1472,7 +1472,7 @@ AFRAME.registerComponent("spin-rotors", {
           >
             <a-gltf-model
               id="external-aircraft-ehang"
-              src="models/Ehang216_for_AFrame_Optimization.glb"
+              
 
               spin-rotors="
                 rpm: 0;
@@ -1570,7 +1570,7 @@ AFRAME.registerComponent("spin-rotors", {
 
         <a-entity
           id="cockpit-aircraft-ehang"
-          gltf-model="url(models/Ehang216_for_AFrame_Optimization.glb)"
+          
 
           spin-rotors="
             rpm: 0;
@@ -2686,8 +2686,7 @@ AFRAME.registerComponent("spin-rotors", {
         if (
           aircraftSelectionConfirmed ||
           (
-            type !== 'alia' &&
-            type !== 'ehang'
+            type !== 'alia'
           )
         ) {
           return;
@@ -4154,16 +4153,35 @@ AFRAME.registerComponent("spin-rotors", {
           FLIGHT_START_POSITION
         );
 
-        car.setAttribute(
-          'animation__takeoff',
-          {
-            property: 'position',
-            from: '0 -15 -70',
-            to: '0 30 -70',
-            dur: TAKEOFF_DURATION,
-            easing: 'easeInOutQuad',
-          }
-        );
+        // ALIA: 垂直上昇の最後の1.5秒で、水平速度をゼロから滑らかに立ち上げる。
+        // 上昇高度は従来のeaseInOutQuadを維持。EHangは従来のアニメーション。
+        const aliaPreAccelDuration = 1500;
+        const aliaPreAccelDistance = 2.6; // 約2.6m、チルト開始時の速度は約3.5m/s
+        const aliaForwardEnd = new THREE.Vector3(120, 30, 30);
+        const aliaForwardDirection = new THREE.Vector3(120, 0, 100).normalize();
+        const aliaTiltStartPosition = new THREE.Vector3(0, 30, -70)
+          .addScaledVector(aliaForwardDirection, aliaPreAccelDistance);
+        if (selectedAircraftType === 'alia') {
+          const ascentStartTime = performance.now();
+          const updateAscent = (now) => {
+            if (currentPhase !== 'intro') return;
+            const elapsed = Math.min(TAKEOFF_DURATION, Math.max(0, now - ascentStartTime));
+            const t = elapsed / TAKEOFF_DURATION;
+            const easedHeight = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+            const preT = Math.max(0, Math.min(1,
+              (elapsed - (TAKEOFF_DURATION - aliaPreAccelDuration)) / aliaPreAccelDuration));
+            const p = new THREE.Vector3(0, -15 + 45 * easedHeight, -70)
+              .addScaledVector(aliaForwardDirection, aliaPreAccelDistance * preT * preT);
+            car.object3D.position.copy(p);
+            if (t < 1) window.requestAnimationFrame(updateAscent);
+          };
+          window.requestAnimationFrame(updateAscent);
+        } else {
+          car.setAttribute('animation__takeoff', {
+            property: 'position', from: '0 -15 -70', to: '0 30 -70',
+            dur: TAKEOFF_DURATION, easing: 'easeInOutQuad',
+          });
+        }
 
         window.setTimeout(() => {
           /*
@@ -4180,12 +4198,13 @@ AFRAME.registerComponent("spin-rotors", {
           // ALIA: 前進の全期間で滑らかに加速し続ける。
           // 距離と所要時間はv5のまま。後半ほど速度が上がる。
           // EHang: 従来のv5の移動を維持する。
-          const forwardStart = new THREE.Vector3(0, 30, -70);
+          const forwardStart = selectedAircraftType === 'alia'
+            ? aliaTiltStartPosition : new THREE.Vector3(0, 30, -70);
           const forwardEnd = new THREE.Vector3(120, 30, 30);
           const posString = v => `${v.x} ${v.y} ${v.z}`;
           if (selectedAircraftType === 'alia') {
-            // v9: 初速を持たせてチルトと同時に見た目も前進開始。
-            // 終端速度はv8のt^6にほぼ等しく、距離・時間は維持。
+            // v10: 上昇終盤からの自然な加速を継続。
+            // チルト開始時に位置・速度が連続するように接続。
             // animation属性を使わずrequestAnimationFrameで補間する。
             const flightStartTime = performance.now();
             const updateForwardMotion = (now) => {
