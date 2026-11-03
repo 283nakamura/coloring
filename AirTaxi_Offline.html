@@ -1732,7 +1732,7 @@ AFRAME.registerComponent("spin-rotors", {
       const TAKEOFF_DURATION = 5000;
       const FORWARD_DURATION = 8100; // ALIAは全区間で加速、前進時間と距離はv5を維持
       const FORWARD_ACCEL_DURATION = 1200;
-      const TILTWING_TRANSITION_DURATION = 5000;
+      const TILTWING_TRANSITION_DURATION = 7500;
       const TILTWING_FORWARD_START_DELAY = 250; // チルト開始後0.25秒で前進
 
       const PREVIEW_POSITION_LANDSCAPE =
@@ -4269,9 +4269,9 @@ AFRAME.registerComponent("spin-rotors", {
         direction.y = 0;
         if (direction.lengthSq() < 0.000001) return;
         direction.normalize();
-        const yaw = Math.atan2(-direction.x, -direction.z) * 180 / Math.PI + 90;
+        const yaw = Math.atan2(-direction.x, -direction.z) * 180 / Math.PI - 90;
 
-        // v7: v6で正面が左に90度ずれていたため、基準向きを-90度補正。
+        // v8: v7の方向補正を逆方向90度へ変更（+90 → -90）。
         // 機体・映像の相対角度は維持する。
         document.getElementById('cockpit-aircraft-alia-facing')
           .setAttribute('rotation', `0 ${120 + yaw} 0`);
