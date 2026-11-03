@@ -1730,7 +1730,7 @@ AFRAME.registerComponent("spin-rotors", {
       const BGM_VOLUME = 0.15;
 
       const TAKEOFF_DURATION = 5000;
-      const FORWARD_DURATION = 8100; // 1.2秒加速 + 6.9秒等速（最高速度はv4と同等）
+      const FORWARD_DURATION = 8100; // ALIAは全区間で加速、前進時間と距離はv5を維持
       const FORWARD_ACCEL_DURATION = 1200;
       const TILTWING_TRANSITION_DURATION = 5000;
       const TILTWING_FORWARD_START_DELAY = 250; // チルト開始後0.25秒で前進
@@ -4177,30 +4177,41 @@ AFRAME.registerComponent("spin-rotors", {
 
           // ALIAはチルト開始から少し遅れて前進。EHangは従来どおり即座に前進。
           window.setTimeout(() => {
-          // 最初の1.2秒で自然に加速し、その後はv4と同じ巡航速度。
-          // 前進距離(120, 0, 100)は変えず、加速分だけ全体を0.6秒延長。
+          // ALIA: 前進の全期間で滑らかに加速し続ける。
+          // 距離と所要時間はv5のまま。後半ほど速度が上がる。
+          // EHang: 従来のv5の移動を維持する。
           const forwardStart = new THREE.Vector3(0, 30, -70);
           const forwardEnd = new THREE.Vector3(120, 30, 30);
-          const forwardAccelRatio = (FORWARD_ACCEL_DURATION / 2) / 7500;
-          const forwardCruiseStart = forwardStart.clone().lerp(forwardEnd, forwardAccelRatio);
           const posString = v => `${v.x} ${v.y} ${v.z}`;
-          car.setAttribute('animation__forward', {
-            property: 'position',
-            from: posString(forwardStart),
-            to: posString(forwardCruiseStart),
-            dur: FORWARD_ACCEL_DURATION,
-            easing: 'easeInQuad',
-          });
-          window.setTimeout(() => {
-            car.removeAttribute('animation__forward');
+          if (selectedAircraftType === 'alia') {
             car.setAttribute('animation__forward', {
               property: 'position',
-              from: posString(forwardCruiseStart),
+              from: posString(forwardStart),
               to: posString(forwardEnd),
-              dur: FORWARD_DURATION - FORWARD_ACCEL_DURATION,
-              easing: 'linear',
+              dur: FORWARD_DURATION,
+              easing: 'easeInQuad',
             });
-          }, FORWARD_ACCEL_DURATION);
+          } else {
+            const forwardAccelRatio = (FORWARD_ACCEL_DURATION / 2) / 7500;
+            const forwardCruiseStart = forwardStart.clone().lerp(forwardEnd, forwardAccelRatio);
+            car.setAttribute('animation__forward', {
+              property: 'position',
+              from: posString(forwardStart),
+              to: posString(forwardCruiseStart),
+              dur: FORWARD_ACCEL_DURATION,
+              easing: 'easeInQuad',
+            });
+            window.setTimeout(() => {
+              car.removeAttribute('animation__forward');
+              car.setAttribute('animation__forward', {
+                property: 'position',
+                from: posString(forwardCruiseStart),
+                to: posString(forwardEnd),
+                dur: FORWARD_DURATION - FORWARD_ACCEL_DURATION,
+                easing: 'linear',
+              });
+            }, FORWARD_ACCEL_DURATION);
+          }
 
           const fadeStart =
             Math.max(
