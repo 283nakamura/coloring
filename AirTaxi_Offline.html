@@ -1731,7 +1731,7 @@ AFRAME.registerComponent("spin-rotors", {
 
       const TAKEOFF_DURATION = 5000;
       const FORWARD_DURATION = 7500;
-      const TILTWING_TRANSITION_DURATION = 2500;
+      const TILTWING_TRANSITION_DURATION = 5000;
       const TILTWING_FORWARD_START_DELAY = 250; // チルト開始後0.25秒で前進
 
       const PREVIEW_POSITION_LANDSCAPE =
@@ -4181,9 +4181,9 @@ AFRAME.registerComponent("spin-rotors", {
             {
               property: 'position',
               from: '0 30 -70',
-              to: '60 30 -20',
+              to: '120 30 30',
               dur: FORWARD_DURATION,
-              easing: 'easeInQuad',
+              easing: 'linear',
             }
           );
 
@@ -4237,9 +4237,10 @@ AFRAME.registerComponent("spin-rotors", {
         direction.y = 0;
         if (direction.lengthSq() < 0.000001) return;
         direction.normalize();
-        const yaw = Math.atan2(-direction.x, -direction.z) * 180 / Math.PI;
+        const yaw = Math.atan2(-direction.x, -direction.z) * 180 / Math.PI + 180;
 
-        // 元のHTMLで調整済みの機体・映像の相対角度はそのまま保つ。
+        // v3で進行方向が背面になったため、基準向きを180度反転。
+        // 機体・映像の相対角度は維持する。
         document.getElementById('cockpit-aircraft-alia-facing')
           .setAttribute('rotation', `0 ${120 + yaw} 0`);
         document.getElementById('cockpit-aircraft-ehang-facing')
