@@ -1450,7 +1450,8 @@ AFRAME.registerComponent("spin-rotors", {
           >
             <a-gltf-model
               id="external-aircraft-alia"
-              src="models/aircraft_ar_meters.glb"
+              src="models/Aircraft_animation.glb"
+              tiltwing-flight=""
 
               scale="108 108 108"
               rotation="0 150 0"
@@ -3731,6 +3732,81 @@ AFRAME.registerComponent("spin-rotors", {
          機体・ローター
       ====================================================== */
 
+      /* -----------------------------------------------------
+         Dream On tilt-wing aircraft: the GLB's Empty pivots
+         are exported as Three.js Object3D nodes.
+         GLB coordinates: Y up, Z wing span, X aircraft axis.
+         The model faces -X; negative Z tilt points thrust up.
+      ----------------------------------------------------- */
+      AFRAME.registerComponent('tiltwing-flight', {
+        init: function () {
+          this.wings = [];
+          this.props = [];
+          this.elapsed = 0;
+          this.rpm = 0;
+          this.from = -75;
+          this.to = -75;
+          this.tilt = -75;
+          this.duration = 0;
+          this.tiltElapsed = 0;
+          this.active = false;
+          this.el.addEventListener('model-loaded', () => {
+            const model = this.el.getObject3D('mesh');
+            if (!model) return;
+            this.wings = ['Wing_Front_Pivot', 'Wing_Rear_Pivot']
+              .map(name => model.getObjectByName(name)).filter(Boolean);
+            this.props = [];
+            for (const side of ['Front', 'Rear']) {
+              for (let i = 1; i <= 4; i++) {
+                const name = `Prop_${side}_${String(i).padStart(2, '0')}_Pivot`;
+                const pivot = model.getObjectByName(name);
+                if (pivot) this.props.push(pivot);
+                else console.warn('[Tiltwing] Missing:', name);
+              }
+            }
+            // Preserve exported pivot rotations; all were zero in this GLB.
+            this.wings.forEach(p => p.rotation.z = this.tilt * Math.PI / 180);
+            console.log('[Tiltwing] loaded', this.wings.length, 'wings,', this.props.length, 'propellers');
+          });
+        },
+        setRpm: function (rpm) { this.rpm = rpm; },
+        setTilt: function (angle, durationMs = 0) {
+          this.from = this.tilt;
+          this.to = angle;
+          this.tiltElapsed = 0;
+          this.duration = Math.max(0, durationMs);
+          if (!this.duration) this.tilt = angle;
+        },
+        tick: function (_time, deltaMs) {
+          if (!this.wings.length) return;
+          const dt = Math.min(Math.max(deltaMs || 0, 0), 100) / 1000;
+          if (this.duration > 0) {
+            this.tiltElapsed += deltaMs || 0;
+            const t = Math.min(1, this.tiltElapsed / this.duration);
+            const smooth = t * t * (3 - 2 * t);
+            this.tilt = this.from + (this.to - this.from) * smooth;
+            if (t >= 1) this.duration = 0;
+          }
+          this.wings.forEach(p => p.rotation.z = this.tilt * Math.PI / 180);
+          // Spin about the propeller's local X axis, independently of wing tilt.
+          const radians = this.rpm * Math.PI * 2 / 60 * dt;
+          this.props.forEach(p => p.rotation.x += radians);
+        }
+      });
+      function getTiltwing() {
+        return externalAircraftAlia?.components?.['tiltwing-flight'];
+      }
+      function resetTiltwingForTakeoff() {
+        const c = getTiltwing();
+        if (!c) return;
+        c.setTilt(-75, 0);
+        c.setRpm(1100);
+      }
+      function transitionTiltwingToForward() {
+        const c = getTiltwing();
+        if (c) c.setTilt(0, Math.min(FORWARD_DURATION * 0.85, 5500));
+      }
+
       function clearAllFlightAnimations() {
         car.removeAttribute(
           'animation__takeoff'
@@ -3790,6 +3866,7 @@ AFRAME.registerComponent("spin-rotors", {
         stopAircraftRotor(
           externalAircraftAlia
         );
+        getTiltwing()?.setRpm(0);
 
         stopAircraftRotor(
           cockpitAircraftAlia
@@ -3848,9 +3925,11 @@ AFRAME.registerComponent("spin-rotors", {
          */
         stopAllRotorSystems();
 
-        startRotorForAircraft(
-          getActiveExternalAircraft()
-        );
+        if (selectedAircraftType === 'alia') {
+          resetTiltwingForTakeoff();
+        } else {
+          startRotorForAircraft(getActiveExternalAircraft());
+        }
       }
 
 
@@ -4065,6 +4144,7 @@ AFRAME.registerComponent("spin-rotors", {
          * 垂直離陸中は水平姿勢に戻します。
          */
         resetExternalEhangTilt();
+        if (selectedAircraftType === 'alia') resetTiltwingForTakeoff();
 
         car.setAttribute(
           'position',
@@ -4090,6 +4170,7 @@ AFRAME.registerComponent("spin-rotors", {
           setExternalEhangTilt(
             EHANG_FORWARD_TILT_DEGREES
           );
+          if (selectedAircraftType === 'alia') transitionTiltwingToForward();
 
           car.setAttribute(
             'animation__forward',
