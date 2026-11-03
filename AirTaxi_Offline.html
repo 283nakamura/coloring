@@ -4184,13 +4184,19 @@ AFRAME.registerComponent("spin-rotors", {
           const forwardEnd = new THREE.Vector3(120, 30, 30);
           const posString = v => `${v.x} ${v.y} ${v.z}`;
           if (selectedAircraftType === 'alia') {
-            car.setAttribute('animation__forward', {
-              property: 'position',
-              from: posString(forwardStart),
-              to: posString(forwardEnd),
-              dur: FORWARD_DURATION,
-              easing: 'easeInQuad',
-            });
+            // v7: t^6 により、v6(t^2)の約3倍の最終速度。
+            // 距離・時間は維持し、前進後半の加速を強調する。
+            // animation属性を使わずrequestAnimationFrameで補間する。
+            const flightStartTime = performance.now();
+            const updateForwardMotion = (now) => {
+              if (currentPhase !== 'intro') return;
+              const t = Math.min(1, Math.max(0, (now - flightStartTime) / FORWARD_DURATION));
+              const progress = Math.pow(t, 6);
+              const p = forwardStart.clone().lerp(forwardEnd, progress);
+              car.object3D.position.copy(p);
+              if (t < 1) window.requestAnimationFrame(updateForwardMotion);
+            };
+            window.requestAnimationFrame(updateForwardMotion);
           } else {
             const forwardAccelRatio = (FORWARD_ACCEL_DURATION / 2) / 7500;
             const forwardCruiseStart = forwardStart.clone().lerp(forwardEnd, forwardAccelRatio);
@@ -4263,9 +4269,9 @@ AFRAME.registerComponent("spin-rotors", {
         direction.y = 0;
         if (direction.lengthSq() < 0.000001) return;
         direction.normalize();
-        const yaw = Math.atan2(-direction.x, -direction.z) * 180 / Math.PI + 180;
+        const yaw = Math.atan2(-direction.x, -direction.z) * 180 / Math.PI + 90;
 
-        // v3で進行方向が背面になったため、基準向きを180度反転。
+        // v7: v6で正面が左に90度ずれていたため、基準向きを-90度補正。
         // 機体・映像の相対角度は維持する。
         document.getElementById('cockpit-aircraft-alia-facing')
           .setAttribute('rotation', `0 ${120 + yaw} 0`);
