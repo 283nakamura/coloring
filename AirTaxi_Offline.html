@@ -3707,7 +3707,7 @@ AFRAME.registerComponent("spin-rotors", {
           mentorHideTimer =
             window.setTimeout(() => {
               hideMentorMessage();
-            }, duration);
+            }, duration + 2000);
         }
       }
 
@@ -4189,7 +4189,12 @@ AFRAME.registerComponent("spin-rotors", {
           setExternalEhangTilt(
             EHANG_FORWARD_TILT_DEGREES
           );
-          if (selectedAircraftType === 'alia') transitionTiltwingToForward();
+          if (selectedAircraftType === 'alia') {
+            // 水平前進は5.0秒から継続し、翼のチルトだけ5.5秒から開始。
+            window.setTimeout(() => {
+              if (currentPhase === 'intro') transitionTiltwingToForward();
+            }, 500);
+          }
 
           // ALIAもEHangもチルト開始と同時に前進開始。
           window.setTimeout(() => {
