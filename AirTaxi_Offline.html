@@ -1730,7 +1730,7 @@ AFRAME.registerComponent("spin-rotors", {
       const BGM_VOLUME = 0.15;
 
       const TAKEOFF_DURATION = 5000;
-      const FORWARD_DURATION = 8100; // ALIAは全区間で加速、前進時間と距離はv5を維持
+      const FORWARD_DURATION = 10000; // ALIAは全区間で加速、前進時間と距離はv5を維持
       const FORWARD_ACCEL_DURATION = 1200;
       const TILTWING_TRANSITION_DURATION = 7500;
       const TILTWING_FORWARD_START_DELAY = 0; // チルト開始と同時に前進
@@ -4155,7 +4155,7 @@ AFRAME.registerComponent("spin-rotors", {
         // 上昇高度は従来のeaseInOutQuadを維持。EHangは従来のアニメーション。
         const aliaPreAccelDuration = 800;
         const aliaPreAccelDistance = 1.35; // 0.8秒で静止から加速し、チルト開始時に約3.4m/s
-        const aliaForwardEnd = new THREE.Vector3(120, 30, 30);
+        const aliaForwardEnd = new THREE.Vector3(148, 30, 53);
         const aliaForwardDirection = new THREE.Vector3(120, 0, 100).normalize();
         const aliaTiltStartPosition = new THREE.Vector3(0, 30, -70)
           .addScaledVector(aliaForwardDirection, aliaPreAccelDistance);
@@ -4198,7 +4198,8 @@ AFRAME.registerComponent("spin-rotors", {
           // EHang: 従来のv5の移動を維持する。
           const forwardStart = selectedAircraftType === 'alia'
             ? aliaTiltStartPosition : new THREE.Vector3(0, 30, -70);
-          const forwardEnd = new THREE.Vector3(120, 30, 30);
+          const forwardEnd = selectedAircraftType === 'alia'
+            ? aliaForwardEnd : new THREE.Vector3(120, 30, 30);
           const posString = v => `${v.x} ${v.y} ${v.z}`;
           if (selectedAircraftType === 'alia') {
             // v10: 上昇終盤からの自然な加速を継続。
@@ -4343,7 +4344,7 @@ AFRAME.registerComponent("spin-rotors", {
             }
 
             showMentorMessage(
-              'ツインタワーに近づいてきたな！',
+              '右下にツインタワーが見えてきたな！',
               5000
             );
           }, 3000);
