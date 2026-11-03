@@ -4151,7 +4151,7 @@ AFRAME.registerComponent("spin-rotors", {
           FLIGHT_START_POSITION
         );
 
-        // ALIA: 垂直上昇の最後の1.5秒で、水平速度をゼロから滑らかに立ち上げる。
+        // ALIA: 垂直上昇の最後の0.8秒で、水平速度をゼロから滑らかに立ち上げる。
         // 上昇高度は従来のeaseInOutQuadを維持。EHangは従来のアニメーション。
         const aliaPreAccelDuration = 800;
         const aliaPreAccelDistance = 1.35; // 0.8秒で静止から加速し、チルト開始時に約3.4m/s
@@ -4209,7 +4209,9 @@ AFRAME.registerComponent("spin-rotors", {
             const updateForwardMotion = (now) => {
               if (currentPhase !== 'intro') return;
               const t = Math.min(1, Math.max(0, (now - flightStartTime) / FORWARD_DURATION));
-              const progress = 0.18 * t + 0.82 * Math.pow(t, 7.1) + 0.055 * 16 * t * t * (1 - t) * (1 - t);
+              // 速度が途中で落ちない単調増加カーブ。開始速度は離陸終盤の加速と接続。
+              // p(t)=0.176t+0.22t²+0.604t³ (p(1)=1, p'(t)は常に増加)。
+              const progress = 0.176 * t + 0.22 * t * t + 0.604 * t * t * t;
               const p = forwardStart.clone().lerp(forwardEnd, progress);
               car.object3D.position.copy(p);
               if (t < 1) window.requestAnimationFrame(updateForwardMotion);
